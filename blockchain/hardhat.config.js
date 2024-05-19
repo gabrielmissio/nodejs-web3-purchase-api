@@ -1,4 +1,3 @@
-require('@dotenvx/dotenvx').config({ path: '../.env' })
 require('@nomicfoundation/hardhat-ethers')
 
 module.exports = {

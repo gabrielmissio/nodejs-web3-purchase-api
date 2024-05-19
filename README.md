@@ -36,8 +36,7 @@ This command starts the server with nodemon, which will automatically restart th
 Navigate to the blockchain directory and start a Hardhat node:
 
 ``` bash
-cd ./blockchain
-npx hardhat node
+npm run hardhat -- node
 ```
 
 ## Integrating with Remix IDE (Optional)
@@ -55,8 +54,7 @@ This setup allows you to directly interact with and test your smart contracts on
 Compile the smart contracts to generate the necessary ABIs. This step is only required if you have made changes to the existing contracts:
 
 ``` bash
-cd ./blockchain
-npx hardhat compile
+npm run hardhat -- compile
 ```
 
 After compilation, copy the ABI file for the Purchase contract to the appropriate directory:
