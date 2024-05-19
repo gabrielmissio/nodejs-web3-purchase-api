@@ -3,7 +3,7 @@ const {
   getContractInstance,
 } = require('../../utils/contract-helper')
 
-async function publishProduct (req, res) {
+async function publishPurchase (req, res) {
   try {
     const { value } = req.body  // value is in wei
 
@@ -36,7 +36,25 @@ async function abortPurchase (req, res) {
   }
 }
 
+async function settleFunds (req, res) {
+  try {
+    const { contractAddress } = req.body
+
+    const contractInstance = await getContractInstance({ contractName: 'Purchase', contractAddress })
+    const abortTx = await contractInstance.refundSeller()
+
+    // NOTE: Maybe it's better don't wait for the transaction to be mined (review it later)
+    const txReceipt = await abortTx.wait()
+
+    return res.status(200).json({ message: 'Settled funds ', txReceipt })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ error: error.message })
+  }
+}
+
 module.exports = {
-  publishProduct,
+  publishPurchase,
   abortPurchase,
+  settleFunds,
 }

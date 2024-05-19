@@ -4,3 +4,4 @@ temp
 node_modules
 blockchain/cache
 blockchain/artifacts
+blockchain/contracts/artifacts

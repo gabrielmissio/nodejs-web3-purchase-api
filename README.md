@@ -44,7 +44,7 @@ npm run hardhat -- node
 For local development with the Remix IDE, start the Remixd service:
 
 ``` bash
-remixd -s ./blockchain --remix-ide https://remix.ethereum.org
+npx @remix-project/remixd -s ./blockchain --remix-ide https://remix.ethereum.org
 ```
 
 This setup allows you to directly interact with and test your smart contracts on the local Hardhat node through the Remix IDE, providing a seamless development environment.

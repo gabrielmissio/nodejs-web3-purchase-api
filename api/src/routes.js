@@ -1,9 +1,10 @@
 const router = require('express').Router()
-const productController = require('./presentation/controllers/product-controller')
+const purchaseController = require('./presentation/controllers/purchase-controller')
 
 router.get('/health', (req, res) => res.status(200).json({ status: 'ok' }))
 
-router.post('/products/publish', productController.publishProduct)
-router.post('/products/abort-purchase', productController.abortPurchase)
+router.post('/purchases/publish', purchaseController.publishPurchase)
+router.post('/purchases/abort', purchaseController.abortPurchase)
+router.post('/purchases/settle-funds', purchaseController.settleFunds)
 
 module.exports = router
