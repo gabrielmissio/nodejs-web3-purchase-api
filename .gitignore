@@ -1,5 +1,6 @@
-.env
 temp
+.env
+.env.keys
 node_modules
 blockchain/cache
 blockchain/artifacts
