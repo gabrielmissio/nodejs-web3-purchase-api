@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "dotenvx run -- nodemon ./api/src/index.js",
     "lint": "eslint",
     "prepare": "husky"
   },
@@ -17,10 +18,12 @@
     "globals": "^15.2.0",
     "hardhat": "^2.22.4",
     "husky": "^9.0.11",
-    "lint-staged": "^15.2.2"
+    "lint-staged": "^15.2.2",
+    "nodemon": "^3.1.0"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^0.40.0",
-    "ethers": "^6.12.1"
+    "ethers": "^6.12.1",
+    "express": "^4.19.2"
   }
 }

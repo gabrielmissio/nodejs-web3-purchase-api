@@ -1,4 +1,5 @@
 .env
+temp
 node_modules
 blockchain/cache
 blockchain/artifacts
