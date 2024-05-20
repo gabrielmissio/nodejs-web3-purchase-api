@@ -19,7 +19,7 @@ Encrypting Your Private Key (Optional)
 ```bash
 dotenvx set ACCOUNT_KEY "PUT YOUR PRIVATE KEY HERE" --encrypt
 # Alternatively, use the private key from ".env.example"
-dotenvx set ACCOUNT_KEY "$(grep '^ACCOUNT_KEY' .env | awk -F '=' '{print $2}')" --encrypt
+dotenvx set ACCOUNT_KEY "$(grep '^ACCOUNT_KEY' .env.example | awk -F '=' '{gsub(/"/, "", $2); print $2}')" --encrypt
 ```
 
 ## Starting the API in Development Mode
