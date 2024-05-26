@@ -7,4 +7,6 @@ router.post('/purchases/publish', purchaseController.publishPurchase)
 router.post('/purchases/abort', purchaseController.abortPurchase)
 router.post('/purchases/settle-funds', purchaseController.settleFunds)
 
+router.get('/products', purchaseController.listProducts)
+
 module.exports = router

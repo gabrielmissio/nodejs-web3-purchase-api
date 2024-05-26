@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "ethers": "^6.12.1",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "mongoose": "^8.4.0"
   }
 }
