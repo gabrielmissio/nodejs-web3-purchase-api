@@ -43,6 +43,7 @@ async function abortPurchase (req, res) {
 
     const abortTx = await contractInstance.abort()
     const txReceipt = await abortTx.wait() // NOTE: Maybe it's better don't wait for the transaction to be mined (review it later)
+    await purchaseRepository.update(contractAddress, { isActive: false })
 
     return res.status(200).json({ message: 'Purchase aborted', txReceipt })
   } catch (error) {
@@ -67,6 +68,7 @@ async function settleFunds (req, res) {
 
     const settleFundsTx = await contractInstance.refundSeller()
     const txReceipt = await settleFundsTx.wait() // NOTE: Maybe it's better don't wait for the transaction to be mined (review it later)
+    await purchaseRepository.update(contractAddress, { isActive: false })
 
     return res.status(200).json({ message: 'Settled funds ', txReceipt })
   } catch (error) {
@@ -76,12 +78,18 @@ async function settleFunds (req, res) {
 }
 
 async function listProducts (req, res) {
+  const filter = {}
+  if (req.query.isActive !== undefined) {
+    filter.isActive = req.query.isActive === 'true'
+  }
+
   try {
-    const products = await purchaseRepository.find()
+    const products = await purchaseRepository.find(filter)
     const parsedProducts = products.map((product) => ({
       id: product._id,
       name: product.name,
       price: product.price,
+      isActive: product.isActive,
       contractAddress: product.contractAddress,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
