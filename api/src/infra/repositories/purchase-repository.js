@@ -15,6 +15,7 @@ const purchaseSchema = new mongoose.Schema(
     name: { type: String, required: true },
     price: { type: String, required: true },
     contractAddress: { type: String, required: true },
+    isActive: { type: Boolean, required: true, default: true },
   },
   {
     timestamps: true, // This enables the createdAt and updatedAt fields
