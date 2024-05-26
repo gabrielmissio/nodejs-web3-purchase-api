@@ -7,10 +7,11 @@ export default [
   pluginJs.configs.recommended,
   {
     rules: {
-        semi: ['error', 'never'],
-        quotes: ['error', 'single'],
-        'eol-last': ['error', 'always'],
-        'comma-dangle': ['error', 'always-multiline'],
+      indent: ['error', 2],
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      'eol-last': ['error', 'always'],
+      'comma-dangle': ['error', 'always-multiline'],
     },
   },
 ]
