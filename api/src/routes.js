@@ -1,9 +1,22 @@
 const router = require('express').Router()
 const validator = require('./middlewares/validator')
+const authController = require('./presentation/controllers/auth-controller')
+const authValidations = require('./presentation/validations/auth-validations')
 const purchaseController = require('./presentation/controllers/purchase-controller')
 const purchaseValidations = require('./presentation/validations/purchase-validations')
 
 router.get('/health', (req, res) => res.status(200).json({ status: 'ok' }))
+
+router.post(
+  '/auth/login',
+  validator(authValidations.login),
+  authController.login,
+)
+router.post(
+  '/auth/signup',
+  validator(authValidations.signup),
+  authController.signup,
+)
 
 router.post(
   '/purchases/publish',
