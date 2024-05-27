@@ -15,7 +15,6 @@ async function login (req, res) {
       return res.status(401).json({ error: 'Invalid credentials' })
     }
     
-    // NOTE: use a different salt for each user is a good practice
     const isPasswordMatch = verifyPassword(password, user.password, user.salt)
     if (!isPasswordMatch) {
       console.log('Invalid password')
@@ -64,7 +63,39 @@ async function signup (req, res) {
   }
 }
 
+async function changePassword (req, res) {
+  try {
+    const token = req.header('Authorization')
+    const { id } = jwt.decode(token.replace('Bearer ', ''))
+    const { oldPassword, newPassword } = req.body
+
+    const user = await userRepository.findOne({ _id: id })
+    if (!user) {
+      console.log('User not found')
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
+    const isPasswordMatch = verifyPassword(oldPassword, user.password, user.salt)
+    if (!isPasswordMatch) {
+      console.log('Invalid password')
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
+    const { salt, hash } = hashPassword(newPassword)
+    await userRepository.updateOne({ _id: id }, {
+      salt,
+      password: hash,
+    })
+
+    return res.status(200).json({ success: true})
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ error: error.message })
+  }
+}
+
 module.exports = {
   login,
   signup,
+  changePassword,
 }

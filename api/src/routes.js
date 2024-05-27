@@ -7,6 +7,7 @@ const purchaseValidations = require('./presentation/validations/purchase-validat
 
 router.get('/health', (req, res) => res.status(200).json({ status: 'ok' }))
 
+// Auth endpoints
 router.post(
   '/auth/login',
   validator(authValidations.login),
@@ -17,7 +18,13 @@ router.post(
   validator(authValidations.signup),
   authController.signup,
 )
+router.post(
+  '/auth/change-password',
+  validator(authValidations.changePassword),
+  authController.changePassword,
+)
 
+// Purchase endpoints
 router.post(
   '/purchases/publish',
   validator(purchaseValidations.publishPurchase),
@@ -33,7 +40,6 @@ router.post(
   validator(purchaseValidations.settleFunds),
   purchaseController.settleFunds,
 )
-
 router.get(
   '/products',
   validator(purchaseValidations.listProducts),

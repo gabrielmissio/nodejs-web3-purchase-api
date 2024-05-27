@@ -22,4 +22,21 @@ const userSchema = new mongoose.Schema(
   },
 )
 
+// Pre 'findOne' hook to convert string ID to ObjectId
+userSchema.pre('findOne', function(next) {
+  const providedId = this.getQuery()._id
+
+  if (providedId && typeof providedId === 'string') {
+    try {
+      const parsedId = new mongoose.Types.ObjectId(providedId)
+      this.getQuery()._id = parsedId
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  next()
+})
+
+
 module.exports = mongoose.model('User', userSchema)

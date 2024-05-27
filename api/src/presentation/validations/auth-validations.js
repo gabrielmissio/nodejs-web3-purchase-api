@@ -19,7 +19,18 @@ const signup = Joi.object({
   }).required(),
 }).unknown(true)
 
+const changePassword = Joi.object({
+  body: Joi.object({
+    oldPassword: Joi.string().required(),
+    newPassword: Joi.string()
+      .regex(passwordRegex)
+      .messages({ 'string.pattern.base': 'New password must be at least 8 characters long and include at least one lowercase letter, one uppercase letter, one number, and one special character.' })
+      .required(),
+  }).required(),
+}).unknown(true)
+
 module.exports = {
   login,
   signup,
+  changePassword,
 }
