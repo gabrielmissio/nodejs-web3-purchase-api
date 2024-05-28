@@ -11,7 +11,7 @@ async function getContractFactory ({ network, contractName }) {
   return contractFactory
 }
 
-async function getContractInstance ({ network, contractName, contractAddress }) {
+function getContractInstance ({ network, contractName, contractAddress }) {
   const walletSigner = getWalletSigner({ network })
   const { abi } = loadMetadata({ contractName })
 

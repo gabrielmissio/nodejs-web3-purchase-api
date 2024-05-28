@@ -9,8 +9,10 @@ async function publishPurchase (req, res) {
   try {
     const { name, value } = req.body  // value is in wei
 
+    // const contractFactory = await getContractFactory({ contractName: 'PurchaseEventProxy' })
     const contractFactory = await getContractFactory({ contractName: 'Purchase' })
-    const deployContractTx = await contractFactory.deploy({ value })
+    // const deployContractTx = await contractFactory.deploy()
+    const deployContractTx = await contractFactory.deploy('0x5FbDB2315678afecb367f032d93F642f64180aa3', { value })
     await deployContractTx.waitForDeployment()
     const contractAddress = await deployContractTx.getAddress()
 
@@ -31,7 +33,7 @@ async function abortPurchase (req, res) {
   try {
     const { contractAddress } = req.body
 
-    const contractInstance = await getContractInstance({
+    const contractInstance = getContractInstance({
       contractName: 'Purchase', contractAddress,
     })
 
@@ -43,7 +45,7 @@ async function abortPurchase (req, res) {
 
     const abortTx = await contractInstance.abort()
     const txReceipt = await abortTx.wait() // NOTE: Maybe it's better don't wait for the transaction to be mined (review it later)
-    await purchaseRepository.update(contractAddress, { isActive: false })
+    await purchaseRepository.updateOne({ contractAddress }, { isActive: false })
 
     return res.status(200).json({ message: 'Purchase aborted', txReceipt })
   } catch (error) {
@@ -56,7 +58,7 @@ async function settleFunds (req, res) {
   try {
     const { contractAddress } = req.body
 
-    const contractInstance = await getContractInstance({
+    const contractInstance = getContractInstance({
       contractName: 'Purchase', contractAddress,
     })
 
@@ -68,7 +70,7 @@ async function settleFunds (req, res) {
 
     const settleFundsTx = await contractInstance.refundSeller()
     const txReceipt = await settleFundsTx.wait() // NOTE: Maybe it's better don't wait for the transaction to be mined (review it later)
-    await purchaseRepository.update(contractAddress, { isActive: false })
+    await purchaseRepository.updateOne({ contractAddress }, { isActive: false })
 
     return res.status(200).json({ message: 'Settled funds ', txReceipt })
   } catch (error) {
