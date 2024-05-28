@@ -19,6 +19,7 @@ async function publishPurchase (req, res) {
     await purchaseRepository.create({
       name,
       price: value,
+      state: purchaseStates[purchaseStates.CREATED],
       contractAddress,
     })
 
@@ -45,7 +46,7 @@ async function abortPurchase (req, res) {
 
     const abortTx = await contractInstance.abort()
     const txReceipt = await abortTx.wait() // NOTE: Maybe it's better don't wait for the transaction to be mined (review it later)
-    await purchaseRepository.updateOne({ contractAddress }, { isActive: false })
+    // await purchaseRepository.updateOne({ contractAddress }, { isActive: false })
 
     return res.status(200).json({ message: 'Purchase aborted', txReceipt })
   } catch (error) {
@@ -70,7 +71,7 @@ async function settleFunds (req, res) {
 
     const settleFundsTx = await contractInstance.refundSeller()
     const txReceipt = await settleFundsTx.wait() // NOTE: Maybe it's better don't wait for the transaction to be mined (review it later)
-    await purchaseRepository.updateOne({ contractAddress }, { isActive: false })
+    // await purchaseRepository.updateOne({ contractAddress }, { isActive: false })
 
     return res.status(200).json({ message: 'Settled funds ', txReceipt })
   } catch (error) {
@@ -91,6 +92,7 @@ async function listProducts (req, res) {
       id: product._id,
       name: product.name,
       price: product.price,
+      state: product.state,
       isActive: product.isActive,
       contractAddress: product.contractAddress,
       createdAt: product.createdAt,
