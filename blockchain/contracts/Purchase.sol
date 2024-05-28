@@ -1,13 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.4;
+
+interface IPurchaseEventProxy {
+    enum State { Aborted, PurchaseConfirmed, ItemReceived, SellerRefunded }
+    function emitPurchaseStateChange(IPurchaseEventProxy.State _state) external;
+}
+
 contract Purchase {
     uint public value;
     address payable public seller;
     address payable public buyer;
+    IPurchaseEventProxy public eventProxy;
 
     enum State { Created, Locked, Release, Inactive }
     // The state variable has a default value of the first member, `State.created`
     State public state;
+
+    // States from the PurchaseEventProxy
+    IPurchaseEventProxy.State private currentState;
 
     modifier condition(bool condition_) {
         require(condition_);
@@ -41,15 +51,11 @@ contract Purchase {
         _;
     }
 
-    event Aborted();
-    event PurchaseConfirmed();
-    event ItemReceived();
-    event SellerRefunded();
-
     // Ensure that `msg.value` is an even number.
     // Division will truncate if it is an odd number.
     // Check via multiplication that it wasn't an odd number.
-    constructor() payable {
+    constructor(address _eventProxy) payable {
+        eventProxy = IPurchaseEventProxy(_eventProxy);
         seller = payable(msg.sender);
         value = msg.value / 2;
         if ((2 * value) != msg.value)
@@ -64,7 +70,7 @@ contract Purchase {
         onlySeller
         inState(State.Created)
     {
-        emit Aborted();
+        eventProxy.emitPurchaseStateChange(IPurchaseEventProxy.State.Aborted);
         state = State.Inactive;
         // We use transfer here directly. It is
         // reentrancy-safe, because it is the
@@ -83,7 +89,7 @@ contract Purchase {
         condition(msg.value == (2 * value))
         payable
     {
-        emit PurchaseConfirmed();
+        eventProxy.emitPurchaseStateChange(IPurchaseEventProxy.State.PurchaseConfirmed);
         buyer = payable(msg.sender);
         state = State.Locked;
     }
@@ -95,7 +101,7 @@ contract Purchase {
         onlyBuyer
         inState(State.Locked)
     {
-        emit ItemReceived();
+        eventProxy.emitPurchaseStateChange(IPurchaseEventProxy.State.ItemReceived);
         // It is important to change the state first because
         // otherwise, the contracts called using `send` below
         // can call in again here.
@@ -111,7 +117,7 @@ contract Purchase {
         onlySeller
         inState(State.Release)
     {
-        emit SellerRefunded();
+        eventProxy.emitPurchaseStateChange(IPurchaseEventProxy.State.SellerRefunded);
         // It is important to change the state first because
         // otherwise, the contracts called using `send` below
         // can call in again here.
