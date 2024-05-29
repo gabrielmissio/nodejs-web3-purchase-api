@@ -30,6 +30,14 @@ function getWalletSigner ({ network, key }) {
   return walletSigner
 }
 
+function getProvider () {
+  const { rcpUrl } = getNetworkConfig()
+
+  const provider = new ethers.JsonRpcProvider(rcpUrl)
+
+  return provider
+}
+
 function getNetworkConfig () {
   const accounts = [process.env.ACCOUNT_KEY]
   const url = process.env.RCP_URL
@@ -53,4 +61,5 @@ module.exports = {
   getContractFactory,
   getContractInstance,
   getWalletSigner,
+  getProvider,
 }

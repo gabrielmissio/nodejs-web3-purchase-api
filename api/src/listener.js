@@ -2,28 +2,65 @@
 // They allow you to react to events emitted by Smart Contracts, such as a purchase being confirmed or a refund being requested.
 
 const {
+  getProvider,
   getContractInstance,
 } = require('./utils/contract-helper')
 const purchaseEvents = require('./utils/purchase-events')
+const blockcountRepository = require('./infra/repositories/blockcount-repository')
 const purchaseRepository = require('./infra/repositories/purchase-repository')
 
-function listen(callback) {
+async function listen(callback) {
+  const provider = getProvider()
+
+  const blockcount = await blockcountRepository.findOne()
+  const currentBlock = await provider.getBlockNumber()
+  console.log('Purchase listener status:',
+    { lastFetchedBlock: blockcount.lastFetchedBlock, currentBlock },
+  )
+
   const contractInstance = getContractInstance({
     contractName: 'PurchaseEventProxy',
     contractAddress: process.env.PURCHASE_EVENT_PROXY_ADDRESS,
   })
-  contractInstance.on('PurchaseStateChange', eventHandler)
+
+  if (blockcount.lastFetchedBlock < currentBlock) {
+    console.log('Syncing past events...')
+    await syncPastEvents(contractInstance, blockcount)
+    console.log('Past events synced...')
+  }
+
+  provider.on('block', async () => {
+    // TODO: validate if blockcount has been updated on "syncPastEvents" function
+    await syncPastEvents(contractInstance, blockcount)
+  })
 
   if (callback && typeof callback === 'function') {
     callback()
   }
 }
 
-async function eventHandler(contractAddress, state) {  // , event) {
+async function syncPastEvents(contractInstance, blockcount) {
+  // TODO: Handle previous blocks on batches to avoid too many events at once
+  const events = await contractInstance.queryFilter(
+    'PurchaseStateChange', blockcount.lastFetchedBlock, 'latest', eventHandler,
+  )
+  for (const event of events) {
+    await eventHandler(...event.args)
+    // TODO: handle multiple events at once
+    // TODO: Handle error (eg. if database is down, retry later)
+
+    if (event.blockNumber > blockcount.lastFetchedBlock) {
+      blockcount.lastFetchedBlock = event.blockNumber
+      await blockcount.save()
+      console.log('Blockcount updated:', blockcount)
+    }
+  }
+}
+
+async function eventHandler(contractAddress, state) {
   try {
     console.log(`Purchase Contract Address: ${contractAddress}`)
-    // console.log(`State: ${purchaseEvents[state]}`)
-    // console.log(`Event: ${JSON.stringify(event.log)}`)
+    console.log(`State: ${purchaseEvents[state]}`)
 
     const filter = { contractAddress }
     const update = { state: purchaseEvents[state] }
@@ -59,7 +96,5 @@ async function eventHandler(contractAddress, state) {  // , event) {
     // TODO: handle error (eg. if database is down, retry later)
   }
 }
-
-// TODO: Add "last block" logic to avoid processing the same event multiple times
 
 module.exports = { listen }

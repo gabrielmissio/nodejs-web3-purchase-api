@@ -2,8 +2,9 @@ const {
   getContractFactory,
 } = require('../api/src/utils/contract-helper')
 
-const authController = require('../api/src/presentation/controllers/auth-controller')
+const blockcountRepository = require('../api/src/infra/repositories/blockcount-repository')
 const userRepository = require('../api/src/infra/repositories/user-repository')
+const authController = require('../api/src/presentation/controllers/auth-controller')
 
 async function deployPurchaseEventProxy() {
   const contractFactory = await getContractFactory({ contractName: 'PurchaseEventProxy' })
@@ -45,6 +46,7 @@ async function main() {
   const [firstAdmin, contractAddress] = await Promise.allSettled([
     createFirstAdmin(),
     deployPurchaseEventProxy(),
+    blockcountRepository.create({ lastFetchedBlock: 0 }),
   ])
 
   console.log('First admin:', firstAdmin.value)
