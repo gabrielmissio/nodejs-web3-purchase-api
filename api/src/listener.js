@@ -57,10 +57,11 @@ async function syncPastEvents(contractInstance, blockcount) {
   }
 }
 
-async function eventHandler(contractAddress, state) {
+async function eventHandler(contractAddress, stateHex) {
   try {
-    console.log(`Purchase Contract Address: ${contractAddress}`)
+    const state = parseInt(stateHex, 16)
     console.log(`State: ${purchaseEvents[state]}`)
+    console.log(`Contract Address: ${contractAddress}`)
 
     const filter = { contractAddress }
     const update = { state: purchaseEvents[state] }
@@ -81,12 +82,14 @@ async function eventHandler(contractAddress, state) {
       return null
     }
 
-    if (purchaseEvents.ABORTED || purchaseEvents.SELLER_REFUNDED) {
+    if (state === purchaseEvents.ABORTED || state === purchaseEvents.SELLER_REFUNDED) {
       update.isActive = false
     }
 
-    if (purchaseEvents.PURCHASE_CONFIRMED) {
-      // TODO: get buyer address
+    if (state === purchaseEvents.PURCHASE_CONFIRMED) {
+      update.buyerAddress = await getContractInstance({
+        contractName: 'Purchase', contractAddress,
+      }).buyer()
     }
 
     const purchase = await purchaseRepository.findOneAndUpdate(filter, update, {new: true})
