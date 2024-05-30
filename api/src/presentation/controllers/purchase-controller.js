@@ -81,13 +81,23 @@ async function settleFunds (req, res) {
 }
 
 async function listProducts (req, res) {
-  const filter = {}
-  if (req.query.isActive !== undefined) {
-    filter.isActive = req.query.isActive === 'true'
-  }
-
   try {
-    const products = await purchaseRepository.find(filter)
+    const { page, limit, ...searchParams } = req.query
+
+    // TODO: Only use "and" operator when there are multiple search params
+    const filter = {
+      $and: Object.keys(searchParams).map((key) => {
+        return searchParams[key].includes(',')
+          ? { '$or': searchParams[key].split(',').map((subKey) => ({ [key]: subKey })) }
+          : { [key]: searchParams[key] }
+      }),
+    }
+    const offset = (page - 1) * limit
+    const [products, productsCount] = await Promise.all([
+      purchaseRepository.find(filter).skip(offset).limit(limit),
+      purchaseRepository.countDocuments(filter),
+    ])
+
     const parsedProducts = products.map((product) => ({
       id: product._id,
       name: product.name,
@@ -99,7 +109,17 @@ async function listProducts (req, res) {
       updatedAt: product.updatedAt,
     }))
 
-    return res.status(200).json({ data: parsedProducts })
+    const result = {
+      data: parsedProducts,
+      meta: {
+        page,
+        next: productsCount > offset + limit ? page + 1 : null,
+        total: productsCount,
+        limit,
+      },
+    }
+
+    return res.status(200).json(result)
   } catch (error) {
     console.error(error)
     return res.status(500).json({ error: error.message })
