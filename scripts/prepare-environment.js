@@ -19,7 +19,7 @@ async function deployPurchaseEventProxy() {
 async function createFirstAdmin() {
   const { FIRST_ADM_USERNAME, FIRST_ADM_PASSWORD } = process.env
   if (!FIRST_ADM_USERNAME || !FIRST_ADM_PASSWORD) {
-    throw new Error('Missing environment variables: FIRST_ADM_USERNAME, FIRST_ADM_PASSWORD')
+    return 'Missing environment variables: FIRST_ADM_USERNAME, FIRST_ADM_PASSWORD'
   }
 
   const alreadyExists = await userRepository.findOne({ username: FIRST_ADM_USERNAME })
@@ -27,30 +27,46 @@ async function createFirstAdmin() {
     return 'First admin already exists'
   }
 
-  await authController.signup({
+  const success = await authController.signup({
     body: {
       username: FIRST_ADM_USERNAME,
       password: FIRST_ADM_PASSWORD,
     },
-  }).catch(() => null)
+  }, {
+    // Mock express response object
+    status: (code) => ({ json: () => code === 201 }),
+  }).catch(() => false)
 
-  const success = userRepository.findOne({ username: FIRST_ADM_USERNAME })
-  if (!success) {
-    throw new Error('Failed to create first admin')
+  return success
+    ? 'Success creating first admin'
+    : 'Failed to create first admin'
+}
+
+async function createBlockcount() {
+  const alreadyExists = await blockcountRepository.findOne()
+  if (alreadyExists) {
+    return 'Blockcount already exists'
   }
 
-  return 'Success creating first admin'
+  const success = await blockcountRepository.create(
+    { lastFetchedBlock: 0 },
+  ).catch(() => false)
+
+  return success
+    ? 'Success creating blockcount'
+    : 'Failed to create blockcount'
 }
 
 async function main() {
-  const [firstAdmin, contractAddress] = await Promise.allSettled([
+  const [blockcount, firstAdmin, contractAddress] = await Promise.allSettled([
+    createBlockcount(),
     createFirstAdmin(),
     deployPurchaseEventProxy(),
-    blockcountRepository.create({ lastFetchedBlock: 0 }),
   ])
 
-  console.log('First admin:', firstAdmin.value)
-  console.log('Contract address:', contractAddress.value)
+  console.log('Blockcount:', blockcount)
+  console.log('First admin:', firstAdmin)
+  console.log('Event proxy contract address:', contractAddress)
 }
 
 main().catch(console.error).finally(() => process.exit(0))
