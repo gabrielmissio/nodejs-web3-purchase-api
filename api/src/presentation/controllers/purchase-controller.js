@@ -105,6 +105,8 @@ async function listProducts (req, res) {
       state: product.state,
       isActive: product.isActive,
       contractAddress: product.contractAddress,
+      settledAt: product.settledAt,
+      receivedAt: product.receivedAt,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
     }))

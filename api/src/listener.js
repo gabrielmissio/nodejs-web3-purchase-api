@@ -11,7 +11,6 @@ const purchaseRepository = require('./infra/repositories/purchase-repository')
 
 async function listen(callback) {
   const provider = getProvider()
-
   const blockcount = await blockcountRepository.findOne()
   const currentBlock = await provider.getBlockNumber()
   console.log('Purchase listener status:',
@@ -23,14 +22,13 @@ async function listen(callback) {
     contractAddress: process.env.PURCHASE_EVENT_PROXY_ADDRESS,
   })
 
-  if (blockcount.lastFetchedBlock < currentBlock) {
+  if (currentBlock > blockcount.lastFetchedBlock) {
     console.log('Syncing past events...')
     await syncPastEvents(contractInstance, blockcount)
     console.log('Past events synced...')
   }
 
   provider.on('block', async () => {
-    // TODO: validate if blockcount has been updated on "syncPastEvents" function
     await syncPastEvents(contractInstance, blockcount)
   })
 
@@ -40,25 +38,31 @@ async function listen(callback) {
 }
 
 async function syncPastEvents(contractInstance, blockcount) {
-  // TODO: Handle previous blocks on batches to avoid too many events at once
+  const currentBlock = await getProvider().getBlockNumber()
   const events = await contractInstance.queryFilter(
-    'PurchaseStateChange', blockcount.lastFetchedBlock, 'latest', eventHandler,
+    'PurchaseStateChange', blockcount.lastFetchedBlock, currentBlock,
   )
+
   for (const event of events) {
-    await eventHandler(...event.args)
+    await eventHandler(event)
     // TODO: handle multiple events at once
     // TODO: Handle error (eg. if database is down, retry later)
 
     if (event.blockNumber > blockcount.lastFetchedBlock) {
       blockcount.lastFetchedBlock = event.blockNumber
       await blockcount.save()
-      console.log('Blockcount updated:', blockcount)
     }
+  }
+
+  if (currentBlock > blockcount.lastFetchedBlock) {
+    blockcount.lastFetchedBlock = currentBlock
+    await blockcount.save()
   }
 }
 
-async function eventHandler(contractAddress, stateHex) {
+async function eventHandler(event) {
   try {
+    const [contractAddress, stateHex] = event.args
     const state = parseInt(stateHex, 16)
     console.log(`State: ${purchaseEvents[state]}`)
     console.log(`Contract Address: ${contractAddress}`)
@@ -70,26 +74,28 @@ async function eventHandler(contractAddress, stateHex) {
     if (!existingPurchase) {
       console.error(`Purchase not found: ${contractAddress}`)
       return null
-    }
-
-    if (!purchaseEvents[state]) {
+    } else if (!purchaseEvents[state]) {
       console.error(`Invalid state: ${state}`)
       return null
-    }
-
-    if (purchaseEvents[existingPurchase.state] >= state) {
+    } else if (purchaseEvents[existingPurchase.state] >= state) {
       console.error(`Invalid state transition: ${existingPurchase.state} to ${purchaseEvents[state]}`)
       return null
-    }
-
-    if (state === purchaseEvents.ABORTED || state === purchaseEvents.SELLER_REFUNDED) {
-      update.isActive = false
     }
 
     if (state === purchaseEvents.PURCHASE_CONFIRMED) {
       update.buyerAddress = (await getContractInstance({
         contractName: 'Purchase', contractAddress,
       }).buyer()).toLowerCase()
+
+      update.settledAt = new Date(
+        (await getProvider().getBlock(event.blockNumber)).timestamp * 1000,
+      )
+    } else if (state === purchaseEvents.ITEM_RECEIVED) {
+      update.receivedAt = new Date(
+        (await getProvider().getBlock(event.blockNumber)).timestamp * 1000,
+      )
+    } else if (state === purchaseEvents.ABORTED || state === purchaseEvents.SELLER_REFUNDED) {
+      update.isActive = false
     }
 
     const purchase = await purchaseRepository.findOneAndUpdate(filter, update, {new: true})

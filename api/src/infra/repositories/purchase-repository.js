@@ -18,6 +18,9 @@ const purchaseSchema = new mongoose.Schema(
     state: { type: String }, // TODO: use enum for state
     buyerAddress: { type: String },
     isActive: { type: Boolean, required: true, default: true },
+    settledAt: { type: Date },
+    receivedAt: { type: Date },
+    // exchangeRateAtSettlement: { type: String },
   },
   {
     timestamps: true, // This enables the createdAt and updatedAt fields
