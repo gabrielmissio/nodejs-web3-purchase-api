@@ -138,7 +138,6 @@ window.addEventListener('load', function() {
 
     ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
       console.log(accounts)
-      alert(accounts)
     })
 
     const getProductsURL = new URL('products', 'http://localhost:3000')
@@ -198,7 +197,7 @@ window.addEventListener('load', function() {
         currentAccount = accounts[0]
 
         const getOrdersURL = new URL('products', 'http://localhost:3000')
-        getOrdersURL.searchParams.append('state', 'PURCHASE_CONFIRMED')
+        getOrdersURL.searchParams.append('state', 'PURCHASE_CONFIRMED,ITEM_RECEIVED')
         getOrdersURL.searchParams.append('buyerAddress', currentAccount)
 
         fetch(getOrdersURL)
@@ -223,8 +222,24 @@ window.addEventListener('load', function() {
               <p>${product.name}</p>
               <p>Price: ${parsedPrice} ETH</p>
               <!-- <p>Address: ${product.contractAddress}</p> -->
-              <button class="button" onclick="confirmReceived('${product.contractAddress}')">Confirm Receive</button>
-            `
+              <!--${product.state === 'PURCHASE_CONFIRMED' ? '<p>Waiting for delivery</p>' : '<p>Waiting for confirmation</p>'} -->
+              `
+//              <button class="button" onclick="confirmReceived('${product.contractAddress}')">Confirm Receive</button>
+
+              if (product.state === 'PURCHASE_CONFIRMED') {
+                productElement.innerHTML += `
+                <p>Purchased On: ${product.settledAt}</p>
+                <button class="button" onclick="confirmReceived('${product.contractAddress}')">Confirm Received</button>
+              `
+              } else if (product.state === 'ITEM_RECEIVED' || product.state === 'SELLER_REFUNDED') {
+                // ${product.settledAt ? `<p>Purchased On: ${formatDate(product.settledAt)}</p>`: ''}
+                productElement.innerHTML += `
+                <p>Purchased On: ${formatDate(product.settledAt)}</p>
+                <p>Received On: ${formatDate(product.receivedAt)}</p>
+              `
+              }
+
+
               productsElement.appendChild(productElement)
             })
 
@@ -263,3 +278,11 @@ window.addEventListener('load', function() {
     console.log('MetaMask is not installed!')
   }
 })
+
+function formatDate(date) {
+  if (!date) {
+    return '-'
+  }
+
+  return date.replace('T', ' ').replace('Z', '')
+}
