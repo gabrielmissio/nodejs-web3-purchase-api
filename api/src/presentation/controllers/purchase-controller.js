@@ -9,9 +9,7 @@ async function publishPurchase (req, res) {
   try {
     const { name, value } = req.body  // value is in wei
 
-    // const contractFactory = await getContractFactory({ contractName: 'PurchaseEventProxy' })
     const contractFactory = await getContractFactory({ contractName: 'Purchase' })
-    // const deployContractTx = await contractFactory.deploy()
     const deployContractTx = await contractFactory.deploy('0x5FbDB2315678afecb367f032d93F642f64180aa3', { value })
     await deployContractTx.waitForDeployment()
     const contractAddress = await deployContractTx.getAddress()
@@ -84,12 +82,12 @@ async function listProducts (req, res) {
   try {
     const { page, limit, ...searchParams } = req.query
 
+    // TODO: Move this logic to a helper function (when you need to reuse it in other places)
     const filter = Object.keys(searchParams).length < 2
       ? Object.keys(searchParams).reduce((acc, key) => {
-        acc = typeof searchParams[key] === 'string' && searchParams[key].includes(',')
-          ? { '$or': searchParams[key].split(',').map((subKey) => ({ [key]: subKey })) }
-          : { [key]: searchParams[key] }
-        return acc
+        return typeof searchParams[key] === 'string' && searchParams[key].includes(',')
+          ? Object.assign(acc, { '$or': searchParams[key].split(',').map((subKey) => ({ [key]: subKey })) })
+          : Object.assign(acc, { [key]: searchParams[key] })
       }, {})
       : {
         $and: Object.keys(searchParams).map((key) => {
