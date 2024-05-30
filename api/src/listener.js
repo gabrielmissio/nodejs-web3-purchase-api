@@ -87,9 +87,9 @@ async function eventHandler(contractAddress, stateHex) {
     }
 
     if (state === purchaseEvents.PURCHASE_CONFIRMED) {
-      update.buyerAddress = await getContractInstance({
+      update.buyerAddress = (await getContractInstance({
         contractName: 'Purchase', contractAddress,
-      }).buyer()
+      }).buyer()).toLowerCase()
     }
 
     const purchase = await purchaseRepository.findOneAndUpdate(filter, update, {new: true})
