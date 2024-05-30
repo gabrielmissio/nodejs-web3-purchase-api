@@ -1,17 +1,16 @@
-#products {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .product {
-    border: 1px solid #ccc;
-    padding: 10px;
-    width: 30%;
-  }
-  .button {
-    background-color: blue;
-    color: white;
-    padding: 5px 10px;
-    cursor: pointer;
-  }
-  
+#products, #orders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.product, .orders {
+  border: 1px solid #ccc;
+  padding: 10px;
+  width: 30%;
+}
+.button {
+  background-color: blue;
+  color: white;
+  padding: 5px 10px;
+  cursor: pointer;
+}
