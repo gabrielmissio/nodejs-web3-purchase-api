@@ -84,14 +84,21 @@ async function listProducts (req, res) {
   try {
     const { page, limit, ...searchParams } = req.query
 
-    // TODO: Only use "and" operator when there are multiple search params
-    const filter = {
-      $and: Object.keys(searchParams).map((key) => {
-        return searchParams[key].includes(',')
+    const filter = Object.keys(searchParams).length < 2
+      ? Object.keys(searchParams).reduce((acc, key) => {
+        acc = typeof searchParams[key] === 'string' && searchParams[key].includes(',')
           ? { '$or': searchParams[key].split(',').map((subKey) => ({ [key]: subKey })) }
           : { [key]: searchParams[key] }
-      }),
-    }
+        return acc
+      }, {})
+      : {
+        $and: Object.keys(searchParams).map((key) => {
+          return typeof searchParams[key] === 'string' && searchParams[key].includes(',')
+            ? { '$or': searchParams[key].split(',').map((subKey) => ({ [key]: subKey })) }
+            : { [key]: searchParams[key] }
+        }),
+      }
+        
     const offset = (page - 1) * limit
     const [products, productsCount] = await Promise.all([
       purchaseRepository.find(filter).skip(offset).limit(limit),
