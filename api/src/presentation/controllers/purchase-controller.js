@@ -9,8 +9,10 @@ async function publishPurchase (req, res) {
   try {
     const { name, value } = req.body  // value is in wei
 
-    const contractFactory = await getContractFactory({ contractName: 'Purchase' })
-    const deployContractTx = await contractFactory.deploy('0x5FbDB2315678afecb367f032d93F642f64180aa3', { value })
+    const contractFactory = getContractFactory({ contractName: 'Purchase' })
+    const deployContractTx = await contractFactory.deploy(
+      process.env.PURCHASE_EVENT_PROXY_ADDRESS, { value },
+    )
     await deployContractTx.waitForDeployment()
     const contractAddress = await deployContractTx.getAddress()
 

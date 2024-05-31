@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const ethers = require('ethers')
 
-async function getContractFactory ({ network, contractName }) {
+function getContractFactory ({ network, contractName }) {
   const walletSigner = getWalletSigner({ network })
   const { abi, bytecode } = loadMetadata({ contractName })
 

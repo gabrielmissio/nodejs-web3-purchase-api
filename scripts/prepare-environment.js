@@ -7,7 +7,7 @@ const userRepository = require('../api/src/infra/repositories/user-repository')
 const authController = require('../api/src/presentation/controllers/auth-controller')
 
 async function deployPurchaseEventProxy() {
-  const contractFactory = await getContractFactory({ contractName: 'PurchaseEventProxy' })
+  const contractFactory = getContractFactory({ contractName: 'PurchaseEventProxy' })
 
   const deployContractTx = await contractFactory.deploy()
   await deployContractTx.waitForDeployment()
