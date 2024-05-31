@@ -9,14 +9,17 @@ async function publishPurchase (req, res) {
   try {
     const { name, value } = req.body  // value is in wei
 
-    const contractFactory = await getContractFactory({ contractName: 'Purchase' })
-    const deployContractTx = await contractFactory.deploy({ value })
+    const contractFactory = getContractFactory({ contractName: 'Purchase' })
+    const deployContractTx = await contractFactory.deploy(
+      process.env.PURCHASE_EVENT_PROXY_ADDRESS, { value },
+    )
     await deployContractTx.waitForDeployment()
     const contractAddress = await deployContractTx.getAddress()
 
     await purchaseRepository.create({
       name,
       price: value,
+      state: purchaseStates[purchaseStates.CREATED],
       contractAddress,
     })
 
@@ -31,7 +34,7 @@ async function abortPurchase (req, res) {
   try {
     const { contractAddress } = req.body
 
-    const contractInstance = await getContractInstance({
+    const contractInstance = getContractInstance({
       contractName: 'Purchase', contractAddress,
     })
 
@@ -43,7 +46,7 @@ async function abortPurchase (req, res) {
 
     const abortTx = await contractInstance.abort()
     const txReceipt = await abortTx.wait() // NOTE: Maybe it's better don't wait for the transaction to be mined (review it later)
-    await purchaseRepository.update(contractAddress, { isActive: false })
+    // await purchaseRepository.updateOne({ contractAddress }, { isActive: false })
 
     return res.status(200).json({ message: 'Purchase aborted', txReceipt })
   } catch (error) {
@@ -56,7 +59,7 @@ async function settleFunds (req, res) {
   try {
     const { contractAddress } = req.body
 
-    const contractInstance = await getContractInstance({
+    const contractInstance = getContractInstance({
       contractName: 'Purchase', contractAddress,
     })
 
@@ -68,7 +71,7 @@ async function settleFunds (req, res) {
 
     const settleFundsTx = await contractInstance.refundSeller()
     const txReceipt = await settleFundsTx.wait() // NOTE: Maybe it's better don't wait for the transaction to be mined (review it later)
-    await purchaseRepository.update(contractAddress, { isActive: false })
+    // await purchaseRepository.updateOne({ contractAddress }, { isActive: false })
 
     return res.status(200).json({ message: 'Settled funds ', txReceipt })
   } catch (error) {
@@ -78,24 +81,54 @@ async function settleFunds (req, res) {
 }
 
 async function listProducts (req, res) {
-  const filter = {}
-  if (req.query.isActive !== undefined) {
-    filter.isActive = req.query.isActive === 'true'
-  }
-
   try {
-    const products = await purchaseRepository.find(filter)
+    const { page, limit, ...searchParams } = req.query
+
+    // TODO: Move this logic to a helper function (when you need to reuse it in other places)
+    const filter = Object.keys(searchParams).length < 2
+      ? Object.keys(searchParams).reduce((acc, key) => {
+        return typeof searchParams[key] === 'string' && searchParams[key].includes(',')
+          ? Object.assign(acc, { '$or': searchParams[key].split(',').map((subKey) => ({ [key]: subKey })) })
+          : Object.assign(acc, { [key]: searchParams[key] })
+      }, {})
+      : {
+        $and: Object.keys(searchParams).map((key) => {
+          return typeof searchParams[key] === 'string' && searchParams[key].includes(',')
+            ? { '$or': searchParams[key].split(',').map((subKey) => ({ [key]: subKey })) }
+            : { [key]: searchParams[key] }
+        }),
+      }
+        
+    const offset = (page - 1) * limit
+    const [products, productsCount] = await Promise.all([
+      purchaseRepository.find(filter).skip(offset).limit(limit),
+      purchaseRepository.countDocuments(filter),
+    ])
+
     const parsedProducts = products.map((product) => ({
       id: product._id,
       name: product.name,
       price: product.price,
+      state: product.state,
       isActive: product.isActive,
       contractAddress: product.contractAddress,
+      settledAt: product.settledAt,
+      receivedAt: product.receivedAt,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
     }))
 
-    return res.status(200).json({ data: parsedProducts })
+    const result = {
+      data: parsedProducts,
+      meta: {
+        page,
+        next: productsCount > offset + limit ? page + 1 : null,
+        total: productsCount,
+        limit,
+      },
+    }
+
+    return res.status(200).json(result)
   } catch (error) {
     console.error(error)
     return res.status(500).json({ error: error.message })

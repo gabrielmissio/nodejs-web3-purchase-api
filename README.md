@@ -22,6 +22,17 @@ dotenvx set ACCOUNT_KEY "PUT YOUR PRIVATE KEY HERE" --encrypt
 dotenvx set ACCOUNT_KEY "$(grep '^ACCOUNT_KEY' .env.example | awk -F '=' '{gsub(/"/, "", $2); print $2}')" --encrypt
 ```
 
+## Preparing Env
+
+(TODO: improve docs)
+(create first adm and deploy PurchaseEventProxy)
+```bash
+export FIRST_ADM_USERNAME="admin"
+export FIRST_ADM_PASSWORD="Abcd1234#"
+
+dotenvx run -- node scripts/prepare-environment
+```
+
 ## Starting the API in Development Mode
 
 To run the API in development mode, use the following command:

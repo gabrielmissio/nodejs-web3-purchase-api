@@ -21,9 +21,15 @@ const settleFunds = Joi.object({
   }).required(),
 }).unknown(true)
 
+// TODO: add time range filter
 const listProducts = Joi.object({
   query: Joi.object({
+    state: Joi.string(),
     isActive: Joi.boolean(),
+    buyerAddress: Joi.string(),
+    contractAddress: Joi.string(),
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(10),
   }).required(),
 }).unknown(true)
 

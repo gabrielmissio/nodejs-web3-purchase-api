@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const ethers = require('ethers')
 
-async function getContractFactory ({ network, contractName }) {
+function getContractFactory ({ network, contractName }) {
   const walletSigner = getWalletSigner({ network })
   const { abi, bytecode } = loadMetadata({ contractName })
 
@@ -11,7 +11,7 @@ async function getContractFactory ({ network, contractName }) {
   return contractFactory
 }
 
-async function getContractInstance ({ network, contractName, contractAddress }) {
+function getContractInstance ({ network, contractName, contractAddress }) {
   const walletSigner = getWalletSigner({ network })
   const { abi } = loadMetadata({ contractName })
 
@@ -28,6 +28,14 @@ function getWalletSigner ({ network, key }) {
   const walletSigner = new ethers.Wallet(key || accountKey, provider)
 
   return walletSigner
+}
+
+function getProvider () {
+  const { rcpUrl } = getNetworkConfig()
+
+  const provider = new ethers.JsonRpcProvider(rcpUrl)
+
+  return provider
 }
 
 function getNetworkConfig () {
@@ -53,4 +61,5 @@ module.exports = {
   getContractFactory,
   getContractInstance,
   getWalletSigner,
+  getProvider,
 }
