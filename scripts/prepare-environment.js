@@ -1,6 +1,7 @@
 const {
   getContractFactory,
 } = require('../api/src/utils/contract-helper')
+const { connectDB } = require('../api/src/infra/helper/db-helper')
 
 const blockcountRepository = require('../api/src/infra/repositories/blockcount-repository')
 const userRepository = require('../api/src/infra/repositories/user-repository')
@@ -69,4 +70,6 @@ async function main() {
   console.log('Event proxy contract address:', contractAddress)
 }
 
-main().catch(console.error).finally(() => process.exit(0))
+connectDB().then(main)
+  .catch(console.error)
+  .finally(() => process.exit(0))
