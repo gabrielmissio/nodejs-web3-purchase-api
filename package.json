@@ -12,7 +12,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@dotenvx/dotenvx": "^0.40.0",
+    "@dotenvx/dotenvx": "^0.44.1",
     "@eslint/js": "^9.3.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "eslint": "^9.3.0",
