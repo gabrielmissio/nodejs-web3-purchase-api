@@ -2,10 +2,9 @@
   "name": "web3-purchase-api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "dotenvx run -- nodemon ./api/src/index.js",
+    "dev": "dotenvx run -- nodemon ./api/src/server.js",
     "hardhat": "dotenvx run -- hardhat --config blockchain/hardhat.config.js",
     "lint": "eslint",
     "prepare": "husky"
@@ -13,7 +12,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@dotenvx/dotenvx": "^0.40.0",
+    "@dotenvx/dotenvx": "^0.44.1",
     "@eslint/js": "^9.3.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "eslint": "^9.3.0",
