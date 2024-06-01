@@ -33,6 +33,12 @@ export FIRST_ADM_PASSWORD="Abcd1234#"
 dotenvx run -- node scripts/prepare-environment
 ```
 
+## Run Seeds
+
+```bash
+dotenvx run -- node scripts/products-seed
+```
+
 ## Starting the API in Development Mode
 
 To run the API in development mode, use the following command:

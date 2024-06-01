@@ -106,4 +106,12 @@ async function eventHandler(event) {
   }
 }
 
-module.exports = { listen }
+function close() {
+  const provider = getProvider()
+  provider.removeAllListeners('block')
+}
+
+module.exports = {
+  listen,
+  close,
+}
