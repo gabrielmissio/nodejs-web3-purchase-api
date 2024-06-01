@@ -135,13 +135,9 @@ const contractABI = [
 
 window.addEventListener('load', function() {
   if (typeof window.ethereum !== 'undefined') {
-
-    ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
-      console.log(accounts)
-    })
-
     const getProductsURL = new URL('products', 'http://localhost:3000')
-    getProductsURL.searchParams.append('state', 'CREATED') // add more states
+    getProductsURL.searchParams.append('state', 'CREATED')
+    getProductsURL.searchParams.append('limit', 12)
 
     fetch(getProductsURL)
       .then(response => response.json().then(({ data: products }) => {
@@ -172,8 +168,6 @@ window.addEventListener('load', function() {
 
         window.buyProduct = async (contractAddress, price) => {
           try {
-            console.log({ contractAddress, contractABI })
-
             const contract1 = new web3.eth.Contract(contractABI, contractAddress)
             const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
             const account = accounts[0]
@@ -183,6 +177,9 @@ window.addEventListener('load', function() {
               from: account,
               value: web3.utils.toWei(price, 'ether'),
             })
+
+            await sleep(3500)
+            this.window.location.reload()
           } catch (error) {
             console.error(error)
           }
@@ -190,6 +187,13 @@ window.addEventListener('load', function() {
 
       }))
       .catch(error => console.error(error))
+
+
+    window.ethereum // Or window.ethereum if you don't support EIP-6963.
+      .on('connect', () => console.log('connected'))
+
+    window.ethereum // Or window.ethereum if you don't support EIP-6963.
+      .on('disconnect', () => console.log('disconnect'))
 
     // orders
     ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
@@ -224,7 +228,6 @@ window.addEventListener('load', function() {
               <!-- <p>Address: ${product.contractAddress}</p> -->
               <!--${product.state === 'PURCHASE_CONFIRMED' ? '<p>Waiting for delivery</p>' : '<p>Waiting for confirmation</p>'} -->
               `
-//              <button class="button" onclick="confirmReceived('${product.contractAddress}')">Confirm Receive</button>
 
               if (product.state === 'PURCHASE_CONFIRMED') {
                 productElement.innerHTML += `
@@ -232,22 +235,18 @@ window.addEventListener('load', function() {
                 <button class="button" onclick="confirmReceived('${product.contractAddress}')">Confirm Received</button>
               `
               } else if (product.state === 'ITEM_RECEIVED' || product.state === 'SELLER_REFUNDED') {
-                // ${product.settledAt ? `<p>Purchased On: ${formatDate(product.settledAt)}</p>`: ''}
                 productElement.innerHTML += `
                 <p>Purchased On: ${formatDate(product.settledAt)}</p>
                 <p>Received On: ${formatDate(product.receivedAt)}</p>
               `
               }
 
-
               productsElement.appendChild(productElement)
             })
 
             this.window.confirmReceived = async (contractAddress) => {
               try {
-                console.log({ contractAddress, contractABI })
                 const contract1 = new web3.eth.Contract(contractABI, contractAddress)
-
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
                 const account = accounts[0]
 
@@ -255,6 +254,9 @@ window.addEventListener('load', function() {
                 await contract1.methods.confirmReceived().send({
                   from: account,
                 })
+
+                await sleep(3500)
+                this.window.location.reload()
               } catch (error) {
                 console.error(error)
               }
@@ -267,9 +269,9 @@ window.addEventListener('load', function() {
 
         const orderElement = document.createElement('div')
         orderElement.innerHTML = `
-            <p>Connect your wallet to see your orders</p>
-            <button class="button" onclick="connectWallet()">Connect Wallet</button>
-          `
+              <p>Connect your wallet to see your orders</p>
+              <button class="button" onclick="connectWallet()">Connect Wallet</button>
+            `
         ordersElement.appendChild(orderElement)
       }
     })
@@ -279,10 +281,21 @@ window.addEventListener('load', function() {
   }
 })
 
+// eslint-disable-next-line no-unused-vars
+function connectWallet () {
+  ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
+    console.log(accounts)
+  })
+}
+
 function formatDate(date) {
   if (!date) {
     return '-'
   }
 
   return date.replace('T', ' ').replace('Z', '')
+}
+
+async function sleep (ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
