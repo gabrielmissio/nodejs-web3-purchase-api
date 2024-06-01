@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "dotenvx run -- nodemon ./api/src/server.js",
+    "dev:api": "dotenvx run -- nodemon ./api/src/server.js",
+    "dev:front": "http-server -o ./frontend/public -p 3001",
     "hardhat": "dotenvx run -- hardhat --config blockchain/hardhat.config.js",
     "lint": "eslint",
     "prepare": "husky"
@@ -18,6 +19,7 @@
     "eslint": "^9.3.0",
     "globals": "^15.2.0",
     "hardhat": "^2.22.4",
+    "http-server": "^14.1.1",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "nodemon": "^3.1.0"
