@@ -98,7 +98,7 @@ async function listProducts (req, res) {
             : { [key]: searchParams[key] }
         }),
       }
-        
+
     const offset = (page - 1) * limit
     const [products, productsCount] = await Promise.all([
       purchaseRepository.find(filter).skip(offset).limit(limit),

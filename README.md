@@ -22,7 +22,21 @@ dotenvx set ACCOUNT_KEY "PUT YOUR PRIVATE KEY HERE" --encrypt
 dotenvx set ACCOUNT_KEY "$(grep '^ACCOUNT_KEY' .env.example | awk -F '=' '{gsub(/"/, "", $2); print $2}')" --encrypt
 ```
 
-## Preparing Env
+## Localhost Database
+
+``` bash
+docker compose up -d
+# or
+docker-compose up -d
+```
+
+## Localhost Blockchain
+
+``` bash
+npm run hardhat -- node
+```
+
+## Prepare Environment
 
 (TODO: improve docs)
 (create first adm and deploy PurchaseEventProxy)
@@ -36,7 +50,7 @@ dotenvx run -- node scripts/prepare-environment
 ## Run Seeds
 
 ```bash
-dotenvx run -- node scripts/products-seed
+dotenvx run -- node scripts/product-seeder
 ```
 
 ## Starting the API in Development Mode
@@ -44,27 +58,18 @@ dotenvx run -- node scripts/products-seed
 To run the API in development mode, use the following command:
 
 ```bash
-npm run dev
+npm run dev:api
 ```
 
 This command starts the server with nodemon, which will automatically restart the server upon any file changes in your project.
 
-## Localhost Blockchain
-Navigate to the blockchain directory and start a Hardhat node:
+## Starting the frontend in Development Mode
 
-``` bash
-npm run hardhat -- node
+To run the frontend in development mode, use the following command:
+
+```bash
+npm run dev:front
 ```
-
-## Integrating with Remix IDE (Optional)
-
-For local development with the Remix IDE, start the Remixd service:
-
-``` bash
-npx @remix-project/remixd -s ./blockchain --remix-ide https://remix.ethereum.org
-```
-
-This setup allows you to directly interact with and test your smart contracts on the local Hardhat node through the Remix IDE, providing a seamless development environment.
 
 ## Compiling and Syncing Smart Contracts
 
@@ -77,5 +82,16 @@ npm run hardhat -- compile
 After compilation, copy the ABI file for the Purchase contract to the appropriate directory:
 
 ``` bash
-cp ./blockchain/artifacts/purchase.sol/Purchase.json ./blockchain/abis/Purchase.json
+cp ./blockchain/artifacts/Purchase.sol/Purchase.json ./blockchain/abis/Purchase.json
+cp ./blockchain/artifacts/PurchaseEventProxy.sol/PurchaseEventProxy.json ./blockchain/abis/PurchaseEventProxy.json
 ```
+
+## Integrating with Remix IDE (Optional)
+
+For local development with the Remix IDE, start the Remixd service:
+
+``` bash
+npx @remix-project/remixd -s ./blockchain --remix-ide https://remix.ethereum.org
+```
+
+This setup allows you to directly interact with and test your smart contracts on the local Hardhat node through the Remix IDE, providing a seamless development environment.

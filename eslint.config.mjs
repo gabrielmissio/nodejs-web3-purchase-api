@@ -12,6 +12,7 @@ export default [
       quotes: ['error', 'single'],
       'eol-last': ['error', 'always'],
       'comma-dangle': ['error', 'always-multiline'],
+      'no-trailing-spaces': 'error',
     },
   },
 ]
