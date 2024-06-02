@@ -235,7 +235,12 @@ function loadProducts (productsPage = 1) {
           })
 
           await sleep(3500)
-          this.window.location.reload()
+          if (products.length === 1 && productsCurrentPage > 1) {
+            productsCurrentPage--
+            currentUrl.searchParams.set('products_page', productsCurrentPage)
+            currentUrl.search = currentUrl.searchParams.toString()
+          }
+          window.location.href = currentUrl.toString()
         } catch (error) {
           console.error(error)
         }
