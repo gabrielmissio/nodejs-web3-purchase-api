@@ -7,7 +7,7 @@ const currentUrl = new URL(window.location)
 
 let productsCurrentPage = 1
 let productsTotalPages = 1
-const productsPerPage = 3
+const productsPerPage = 6
 
 let ordersCurrentPage = 1
 let ordersTotalPages = 1
@@ -312,7 +312,7 @@ function loadOrders (ordersPage = 1) {
 
             if (product.state === 'PURCHASE_CONFIRMED') {
               productElement.innerHTML += `
-              <p>Purchased On: ${product.settledAt}</p>
+              <p>Purchased On: ${formatDate(product.settledAt)}</p>
               <button class="button" onclick="confirmReceived('${product.contractAddress}')">Confirm Received</button>
             `
             } else if (product.state === 'ITEM_RECEIVED' || product.state === 'SELLER_REFUNDED') {
@@ -449,7 +449,10 @@ function formatDate(date) {
     return '-'
   }
 
-  return date.replace('T', ' ').replace('Z', '')
+  return date
+    .replace('T', ' ')
+    .replace('Z', '')
+    .slice(0, -7)
 }
 
 async function sleep (ms) {
