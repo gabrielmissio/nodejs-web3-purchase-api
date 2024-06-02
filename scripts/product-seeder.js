@@ -46,7 +46,7 @@ const products = [
   },
   {
     'name': 'Plutonio 235g',
-    'value': '800000000000000000000',    
+    'value': '800000000000000000000',
   },
   {
     'name': 'Reator nucelar sovietico',

@@ -5,7 +5,7 @@ const { verifyPassword, hashPassword } = require('../../utils/auth-helper')
 async function login (req, res) {
   try {
     const { username, password } = req.body
-  
+
     const user = await userRepository.findOne({ username })
     if (!user) {
       // ** This is a security vulnerability. **
@@ -14,13 +14,13 @@ async function login (req, res) {
       console.log('User not found')
       return res.status(401).json({ error: 'Invalid credentials' })
     }
-    
+
     const isPasswordMatch = verifyPassword(password, user.password, user.salt)
     if (!isPasswordMatch) {
       console.log('Invalid password')
       return res.status(401).json({ error: 'Invalid credentials' })
     }
-    
+
     const token = jwt.sign(
       { id: user._id },
       process.env.AUTH_JWT_SECRET,
