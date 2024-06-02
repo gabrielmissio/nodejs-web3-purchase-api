@@ -181,6 +181,9 @@ function loadProducts (productsPage = 1) {
           <p>No products available</p>
         `
         productsElement.appendChild(productElement)
+
+        document.getElementById('products-prev-btn').style.display = 'none'
+        document.getElementById('products-next-btn').style.display = 'none'
       } else {
         document.getElementById('products-prev-btn').addEventListener('click', () => {
           if (productsCurrentPage > 1) {
@@ -272,6 +275,9 @@ function loadOrders (ordersPage = 1) {
             <p>No orders yet</p>
           `
             productsElement.appendChild(productElement)
+
+            document.getElementById('orders-prev-btn').style.display = 'none'
+            document.getElementById('orders-next-btn').style.display = 'none'
           } else {
             document.getElementById('orders-prev-btn').addEventListener('click', () => {
               if (ordersCurrentPage > 1) {
@@ -403,7 +409,10 @@ function setupEvents () {
       return
     }
 
-    window.location.reload()
+    currentUrl.searchParams.set('products_page', 1)
+    currentUrl.searchParams.set('orders_page', 1)
+    currentUrl.search = currentUrl.searchParams.toString()
+    window.location.href = currentUrl.toString()
   })
 }
 
