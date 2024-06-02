@@ -28,3 +28,44 @@
 .button:hover {
   background-color: #0056b3;
 }
+
+/*Pagination Component*/
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination button, .pages button {
+  padding: 8px 16px;
+  margin: 0 5px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s ease;
+}
+
+.pagination button:disabled, .pages button.disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pages button {
+  background-color: transparent;
+  color: #007BFF;
+  border: 1px solid #007BFF;
+}
+
+.pages button.active {
+  background-color: #007BFF;
+  color: white;
+}
+
+.pages button:not(.active):hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}

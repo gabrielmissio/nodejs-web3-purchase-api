@@ -3,6 +3,15 @@
 let currentAccount = null
 let userHasMetaMask = false
 const API_URL = 'http://localhost:3000'
+const currentUrl = new URL(window.location)
+
+let productsCurrentPage = 1
+let productsTotalPages = 1
+const productsPerPage = 3
+
+let ordersCurrentPage = 1
+let ordersTotalPages = 1
+const ordersPerPage = 3
 
 const contractABI = [
   {
@@ -137,12 +146,13 @@ const contractABI = [
 ]
 
 window.addEventListener('load', async function() {
-  loadProducts()
-
+  const { ordersPage, productsPage } = getSearchParams(window.location)
   userHasMetaMask = typeof window.ethereum !== 'undefined'
 
+  loadProducts(productsPage)
+
   if (userHasMetaMask) {
-    loadOrders()
+    loadOrders(ordersPage)
     setupEvents()
   } else {
     const ordersElement = document.getElementById('orders')
@@ -154,22 +164,41 @@ window.addEventListener('load', async function() {
   }
 })
 
-function loadProducts () {
+function loadProducts (productsPage = 1) {
   const getProductsURL = new URL('products', API_URL)
   getProductsURL.searchParams.append('state', 'CREATED')
-  getProductsURL.searchParams.append('limit', 12)
+  getProductsURL.searchParams.append('limit', productsPerPage)
+  getProductsURL.searchParams.append('page', productsPage)
 
   fetch(getProductsURL)
-    .then(response => response.json().then(({ data: products }) => {
+    .then(response => response.json().then(({ data: products, meta }) => {
       const web3 = new Web3(window.ethereum)
       const productsElement = document.getElementById('products')
 
-      if (products.length === 0) {
+      if (products.length === 0 && productsPage === 1) {
         const productElement = document.createElement('div')
         productElement.innerHTML = `
           <p>No products available</p>
         `
         productsElement.appendChild(productElement)
+      } else {
+        document.getElementById('products-prev-btn').addEventListener('click', () => {
+          if (productsCurrentPage > 1) {
+            productsCurrentPage--
+            currentUrl.searchParams.set('products_page', productsCurrentPage)
+            currentUrl.search = currentUrl.searchParams.toString()
+            window.location.href = currentUrl.toString()
+          }
+        })
+
+        document.getElementById('products-next-btn').addEventListener('click', () => {
+          if (productsCurrentPage < productsTotalPages) {
+            productsCurrentPage++
+            currentUrl.searchParams.set('products_page', productsCurrentPage)
+            currentUrl.search = currentUrl.searchParams.toString()
+            window.location.href = currentUrl.toString()
+          }
+        })
       }
 
       products.forEach(product => {
@@ -185,6 +214,9 @@ function loadProducts () {
         `
         productsElement.appendChild(productElement)
       })
+
+      productsTotalPages = Math.ceil(meta.total / productsPerPage)
+      updatePaginationButtons(productsCurrentPage, productsTotalPages, 'products')
 
       window.buyProduct = async (contractAddress, price) => {
         try {
@@ -213,7 +245,7 @@ function loadProducts () {
     .catch(error => console.error(error))
 }
 
-function loadOrders () {
+function loadOrders (ordersPage = 1) {
   ethereum.request({ method: 'eth_accounts' }).then(accounts => {
     if (accounts.length > 0) {
       currentAccount = accounts[0]
@@ -221,18 +253,38 @@ function loadOrders () {
       const getOrdersURL = new URL('products', API_URL)
       getOrdersURL.searchParams.append('buyerAddress', currentAccount)
       getOrdersURL.searchParams.append('state', 'PURCHASE_CONFIRMED,ITEM_RECEIVED,SELLER_REFUNDED')
+      getOrdersURL.searchParams.append('limit', ordersPerPage)
+      getOrdersURL.searchParams.append('page', ordersPage)
 
       fetch(getOrdersURL)
-        .then(response => response.json().then(({ data: products }) => {
+        .then(response => response.json().then(({ data: products, meta }) => {
           const web3 = new Web3(window.ethereum)
           const productsElement = document.getElementById('orders')
 
-          if (products.length === 0) {
+          if (products.length === 0 && ordersPage === 1) {
             const productElement = document.createElement('div')
             productElement.innerHTML = `
             <p>No orders yet</p>
           `
             productsElement.appendChild(productElement)
+          } else {
+            document.getElementById('orders-prev-btn').addEventListener('click', () => {
+              if (ordersCurrentPage > 1) {
+                ordersCurrentPage--
+                currentUrl.searchParams.set('orders_page', ordersCurrentPage)
+                currentUrl.search = currentUrl.searchParams.toString()
+                window.location.href = currentUrl.toString()
+              }
+            })
+
+            document.getElementById('orders-next-btn').addEventListener('click', () => {
+              if (ordersCurrentPage < ordersTotalPages) {
+                ordersCurrentPage++
+                currentUrl.searchParams.set('orders_page', ordersCurrentPage)
+                currentUrl.search = currentUrl.searchParams.toString()
+                window.location.href = currentUrl.toString()
+              }
+            })
           }
 
           products.forEach(product => {
@@ -261,6 +313,9 @@ function loadOrders () {
 
             productsElement.appendChild(productElement)
           })
+
+          ordersTotalPages = Math.ceil(meta.total / ordersPerPage)
+          updatePaginationButtons(ordersCurrentPage, ordersTotalPages, 'orders')
 
           this.window.confirmReceived = async (contractAddress) => {
             try {
@@ -347,6 +402,34 @@ function setupEvents () {
   })
 }
 
+function getSearchParams () {
+  const providedProductsPage = currentUrl.searchParams.get('products_page')
+  const providedOrdersPage = currentUrl.searchParams.get('orders_page')
+
+  const result = {
+    productsPage: 1,
+    ordersPage: 1,
+  }
+
+  if (providedProductsPage) {
+    const parsedProvidedProductsPage = parseInt(providedProductsPage)
+    if (!isNaN(parsedProvidedProductsPage) && parsedProvidedProductsPage > 0) {
+      productsCurrentPage = parsedProvidedProductsPage
+      result.productsPage = parsedProvidedProductsPage
+    }
+  }
+
+  if (providedOrdersPage) {
+    const parsedProvidedOrdersPage = parseInt(providedOrdersPage)
+    if (!isNaN(parsedProvidedOrdersPage) && parsedProvidedOrdersPage > 0) {
+      ordersCurrentPage = parsedProvidedOrdersPage
+      result.ordersPage = parsedProvidedOrdersPage
+    }
+  }
+
+  return result
+}
+
 function formatDate(date) {
   if (!date) {
     return '-'
@@ -357,4 +440,25 @@ function formatDate(date) {
 
 async function sleep (ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+/* Pagination functions */
+function updatePaginationButtons(currentPage, totalPages, domain) {
+  const pages = document.getElementById(`${domain}-pages`)
+
+  pages.innerHTML = ''
+  for (let i = 1; i <= totalPages; i++) {
+    const pageButton = document.createElement('button')
+    pageButton.textContent = i
+    pageButton.addEventListener('click', function() {
+      currentPage = i
+      currentUrl.searchParams.set(`${domain}_page`, currentPage)
+      currentUrl.search = currentUrl.searchParams.toString()
+      window.location.href = currentUrl.toString()
+    })
+    if (i === currentPage) {
+      pageButton.classList.add('active')
+    }
+    pages.appendChild(pageButton)
+  }
 }
