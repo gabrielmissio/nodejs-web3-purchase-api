@@ -3,14 +3,28 @@
   flex-wrap: wrap;
   gap: 10px;
 }
+
 .product, .orders {
   border: 1px solid #ccc;
   padding: 10px;
   width: 30%;
 }
+
+.product:hover, .order:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
 .button {
-  background-color: blue;
+  background-color: #007BFF;
   color: white;
-  padding: 5px 10px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
   cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #0056b3;
 }
