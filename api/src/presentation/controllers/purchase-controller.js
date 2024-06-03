@@ -1,8 +1,10 @@
 const {
+  weiToEth,
   getContractFactory,
   getContractInstance,
 } = require('../../utils/contract-helper')
 const purchaseStates = require('../../utils/purchase-states')
+const exchangeRateAPI = require('../../infra/apis/exchange-rate')
 const purchaseRepository = require('../../infra/repositories/purchase-repository')
 
 async function publishPurchase (req, res) {
@@ -100,16 +102,18 @@ async function listProducts (req, res) {
       }
 
     const offset = (page - 1) * limit
-    const [products, productsCount] = await Promise.all([
+    const [products, productsCount, exchangeRate] = await Promise.all([
       purchaseRepository.find(filter).skip(offset).limit(limit),
       purchaseRepository.countDocuments(filter),
+      exchangeRateAPI.getExchangeRate('ethereum', 'brl'),
     ])
 
     const parsedProducts = products.map((product) => ({
       id: product._id,
       name: product.name,
-      price: product.price,
       state: product.state,
+      price: product.price,
+      fiatPrice: getFiatPrice(product.price, exchangeRate.value),
       isActive: product.isActive,
       contractAddress: product.contractAddress,
       settledAt: product.settledAt,
@@ -133,6 +137,10 @@ async function listProducts (req, res) {
     console.error(error)
     return res.status(500).json({ error: error.message })
   }
+}
+
+function getFiatPrice (price, exchangeRate) {
+  return (parseFloat(weiToEth(price)) * exchangeRate).toFixed(2)
 }
 
 module.exports = {

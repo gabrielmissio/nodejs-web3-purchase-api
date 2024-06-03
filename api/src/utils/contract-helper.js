@@ -38,6 +38,10 @@ function getProvider () {
   return provider
 }
 
+function weiToEth (wei) {
+  return ethers.formatEther(wei)
+}
+
 function getNetworkConfig () {
   const accounts = [process.env.ACCOUNT_KEY]
   const url = process.env.RCP_URL
@@ -62,4 +66,5 @@ module.exports = {
   getContractInstance,
   getWalletSigner,
   getProvider,
+  weiToEth,
 }

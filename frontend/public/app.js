@@ -211,7 +211,7 @@ function loadProducts (productsPage = 1) {
         productElement.className = 'product'
         productElement.innerHTML = `
           <p>${product.name}</p>
-          <p>Price: ${parsedPrice} ETH</p>
+          <p>Price: ${parsedPrice} ETH (${BRL.format(product.fiatPrice)})</p>
           <!-- <p>Address: ${product.contractAddress}</p> -->
           <button class="button" onclick="buyProduct('${product.contractAddress}', '${parsedPrice}')">Buy</button>
         `
@@ -443,6 +443,12 @@ function getSearchParams () {
 
   return result
 }
+
+/* Helper functions */
+const BRL = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+})
 
 function formatDate(date) {
   if (!date) {
