@@ -1,20 +1,20 @@
-# nodejs-web3-purchase-api
+# EVM Shop API
 
-## Project Setup
+## Configuração do Projeto
 
-First, install the necessary dependencies
+Primeiro, instale as dependências necessárias:
 
 ``` bash
 npm install
 ```
 
-Next, set up your environment variables:
+Em seguida, configure suas variáveis de ambiente:
 
 ``` bash
 cp .env.example .env
 ```
 
-Encrypting Your Private Key (Optional)
+Opcionalmente, criptofrafe suas variáveis sensíveis
 
 ```bash
 dotenvx set ACCOUNT_KEY "PUT YOUR PRIVATE KEY HERE" --encrypt
@@ -22,24 +22,24 @@ dotenvx set ACCOUNT_KEY "PUT YOUR PRIVATE KEY HERE" --encrypt
 dotenvx set ACCOUNT_KEY "$(grep '^ACCOUNT_KEY' .env.example | awk -F '=' '{gsub(/"/, "", $2); print $2}')" --encrypt
 ```
 
-## Localhost Database
+## Configurar Ambiente de Desenvolvimento
 
-``` bash
+Utilize o `docker compose` para subir o banco de dados em localhost.
+
+```bash
 docker compose up -d
-# or
+# ou
 docker-compose up -d
 ```
 
-## Localhost Blockchain
+Em seguida, utilize o `hardhat` para subir um node EVM em localhost.
 
 ``` bash
 npm run hardhat -- node
 ```
 
-## Prepare Environment
+Agora vamos executar alguns scripts para aplicar as configurações inicias da aplicação. O que consiste em criar o primeiro usuario admin, e implantar o contrato de proxy na rede do hardhat.
 
-(TODO: improve docs)
-(create first adm and deploy PurchaseEventProxy)
 ```bash
 export FIRST_ADM_USERNAME="admin"
 export FIRST_ADM_PASSWORD="Abcd1234#"
@@ -47,51 +47,47 @@ export FIRST_ADM_PASSWORD="Abcd1234#"
 dotenvx run -- node scripts/prepare-environment
 ```
 
-## Run Seeds
+De forma opcional, execute o script `product seeder` para popular o banco de dados e a blockchain com alguns exemplos de produtos.
 
 ```bash
 dotenvx run -- node scripts/product-seeder
 ```
 
-## Starting the API in Development Mode
+## Iniciar Aplicação
 
-To run the API in development mode, use the following command:
+### API (e Listener)
+
+Para executar a API no modo de desenvolvimento, use o seguinte comando:
 
 ```bash
 npm run dev:api
 ```
 
-This command starts the server with nodemon, which will automatically restart the server upon any file changes in your project.
+Este comando inicia o servidor com o nodemon, que reiniciará automaticamente o servidor sempre que houver alterações nos arquivos do projeto.
 
-## Starting the frontend in Development Mode
 
-To run the frontend in development mode, use the following command:
+### Frontend
+
+Para executar o frontend no modo de desenvolvimento, use o seguinte comando:
 
 ```bash
 npm run dev:front
 ```
 
-## Compiling and Syncing Smart Contracts
+## Contratos Inteligentes
 
-Compile the smart contracts to generate the necessary ABIs. This step is only required if you have made changes to the existing contracts:
+### Compilação e Sincronização
 
-``` bash
+Compile os contratos e sincronize as ABI (apenas se os contratos forem alterados):
+
+```bash
 npm run hardhat -- compile
-```
-
-After compilation, copy the ABI file for the Purchase contract to the appropriate directory:
-
-``` bash
 cp ./blockchain/artifacts/Purchase.sol/Purchase.json ./blockchain/abis/Purchase.json
 cp ./blockchain/artifacts/PurchaseEventProxy.sol/PurchaseEventProxy.json ./blockchain/abis/PurchaseEventProxy.json
 ```
 
-## Integrating with Remix IDE (Optional)
+### Integração com Remix IDE (Opcional)
 
-For local development with the Remix IDE, start the Remixd service:
-
-``` bash
+```bash
 npx @remix-project/remixd -s ./blockchain --remix-ide https://remix.ethereum.org
 ```
-
-This setup allows you to directly interact with and test your smart contracts on the local Hardhat node through the Remix IDE, providing a seamless development environment.
