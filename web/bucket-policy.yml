@@ -1,0 +1,25 @@
+Parameters:
+  StageName:
+    Type: String
+  AppName:
+    Type: String
+
+Resources:
+  WebAppBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !ImportValue
+        "Fn::Sub": "${AppName}-web-app-bucket-name-${StageName}"
+      PolicyDocument:
+        Statement:
+          - Action: s3:GetObject
+            Effect: Allow
+            Resource: !Join
+              - ""
+              - - "arn:aws:s3:::"
+                - !ImportValue
+                  "Fn::Sub": "${AppName}-web-app-bucket-name-${StageName}"
+                - "/*"
+            Principal:
+              CanonicalUser: !ImportValue
+                "Fn::Sub": "${AppName}-web-app-cloudfront-S3-canonical-user-id-${StageName}"

@@ -1,0 +1,61 @@
+Parameters:
+  StageName:
+    Type: String
+  AppName:
+    Type: String
+
+Resources:
+  CloudFrontOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Join
+          - "Access "
+          - - ""
+            - !ImportValue
+              "Fn::Sub": "${AppName}-web-app-bucket-name-${StageName}"
+            - " bucket"
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub "${AppName}-distribution-${StageName}"
+        HttpVersion: http2
+        Origins:
+          - Id: !ImportValue
+              "Fn::Sub": "${AppName}-web-app-bucket-name-${StageName}"
+            DomainName: !ImportValue
+              "Fn::Sub": ${AppName}-web-app-bucket-regional-domain-name-${StageName}
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}"
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          TargetOriginId: !ImportValue
+            "Fn::Sub": "${AppName}-web-app-bucket-name-${StageName}"
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        PriceClass: PriceClass_All
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+Outputs:
+  CloudFrontDistributionDomainName:
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub ${AppName}-web-app-cloudfront-domain-name-${StageName}
+  CloudFrontOriginAccessIdentityS3CanonicalUserId:
+    Value: !GetAtt CloudFrontOriginAccessIdentity.S3CanonicalUserId
+    Export:
+      Name: !Sub ${AppName}-web-app-cloudfront-S3-canonical-user-id-${StageName}

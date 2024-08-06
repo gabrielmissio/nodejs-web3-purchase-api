@@ -1,0 +1,19 @@
+Parameters:
+  StageName:
+    Type: String
+  AppName:
+    Type: String
+
+Resources:
+  WebAppBucket:
+    Type: AWS::S3::Bucket
+
+Outputs:
+  WebAppBucketName:
+    Value: !Ref WebAppBucket
+    Export:
+      Name: !Sub ${AppName}-web-app-bucket-name-${StageName}
+  WebAppBucketRegionalDomainName:
+    Value: !GetAtt WebAppBucket.RegionalDomainName
+    Export:
+      Name: !Sub ${AppName}-web-app-bucket-regional-domain-name-${StageName}
