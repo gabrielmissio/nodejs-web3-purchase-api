@@ -1,5 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
+Parameters:
+  StageName:
+    Type: String
+    Default: dev
+    Description: The name of the API stage
 Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
@@ -25,7 +30,7 @@ Resources:
     Properties:
       Handler: apps/admin/index.handler
       Runtime: nodejs18.x
-      CodeUri: s3://my-temp-deployment-bucket/448946f2f12d454c66fa77935e6ea90f
+      CodeUri: s3://my-temp-deployment-bucket/f0778f93d6b22a445d9346da2caee0c4
       MemorySize: 128
       Timeout: 5
       Environment:
@@ -56,7 +61,7 @@ Resources:
     Properties:
       Handler: apps/customer/index.handler
       Runtime: nodejs18.x
-      CodeUri: s3://my-temp-deployment-bucket/448946f2f12d454c66fa77935e6ea90f
+      CodeUri: s3://my-temp-deployment-bucket/f0778f93d6b22a445d9346da2caee0c4
       MemorySize: 128
       Timeout: 5
       Policies:
@@ -79,7 +84,7 @@ Resources:
     Metadata:
       SamResourceId: CustomerLambdaFunction
 Outputs:
-  ApiGatewayInvokeURL:
+  ApiGatewayAdminInvokeURL:
     Description: Invoke URL for the API Gateway
     Value:
       Fn::Sub: https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/admin
@@ -89,14 +94,13 @@ Outputs:
       Fn::GetAtt:
       - AdminLambdaFunction
       - Arn
+  ApiGatewayCustomerInvokeURL:
+    Description: Invoke URL for the API Gateway
+    Value:
+      Fn::Sub: https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/customer
   CustomerLambdaFunctionArn:
     Description: ARN of the deployed Lambda function
     Value:
       Fn::GetAtt:
       - CustomerLambdaFunction
       - Arn
-Parameters:
-  StageName:
-    Type: String
-    Default: dev
-    Description: The name of the API stage

@@ -7,14 +7,18 @@ Parameters:
 Resources:
   StaticWebsiteBucket:
     Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
 
   StaticWebsiteBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref StaticWebsiteBucket
       PolicyDocument:
-        # Version: "2008-10-17"
-        # Id: "PolicyForCloudFrontPrivateContent"
         Statement:
           - Sid: "AllowCloudFrontServicePrincipal"
             Effect: "Allow"

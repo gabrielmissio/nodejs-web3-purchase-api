@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:front": "http-server -o ./frontend/public -p 3001",
+    "hardhat": "dotenvx run -- hardhat --config blockchain/hardhat.config.js",
+    "lint": "eslint",
+    "prepare": "husky"
   },
   "author": "",
   "license": "MIT",

@@ -1,0 +1,111 @@
+Parameters:
+  AppName:
+    Description: The app of the stack
+    Default: PrepareForDrex
+    Type: String
+    MinLength: 1
+    MaxLength: 16
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9\-]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  StageName:
+    Description: The stage of the stack
+    Default: dev
+    Type: String
+    MinLength: 1
+    MaxLength: 16
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9\-]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  ReadCapacityUnits:
+    Description: Provisioned read throughput
+    Type: Number
+    Default: 5
+    MinValue: 5
+    MaxValue: 10000
+    ConstraintDescription: must be between 5 and 10000
+  WriteCapacityUnits:
+    Description: Provisioned write throughput
+    Type: Number
+    Default: 5
+    MinValue: 5
+    MaxValue: 10000
+    ConstraintDescription: must be between 5 and 10000
+
+Conditions:
+  IsProdStack: !Equals [ !Ref StageName, 'prod' ]
+
+Resources:
+  AddressTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${AppName}-WalletAddresses-${StageName}
+      BillingMode: !If [IsProdStack, PAY_PER_REQUEST, PROVISIONED]
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: address
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      ProvisionedThroughput:
+        !If
+          - IsProdStack
+          - !Ref "AWS::NoValue"
+          -
+            ReadCapacityUnits: !Ref ReadCapacityUnits
+            WriteCapacityUnits: !Ref WriteCapacityUnits
+      GlobalSecondaryIndexes:
+        - IndexName: address-index
+          KeySchema:
+            - AttributeName: address
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            !If
+              - IsProdStack
+              - !Ref "AWS::NoValue"
+              -
+                ReadCapacityUnits: !Ref ReadCapacityUnits
+                WriteCapacityUnits: !Ref WriteCapacityUnits
+
+  BlockCounterTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${AppName}-ListenerBlockCounter-${StageName}
+      BillingMode: !If [IsProdStack, PAY_PER_REQUEST, PROVISIONED]
+      AttributeDefinitions:
+        - AttributeName: contractAddress
+          AttributeType: S
+        - AttributeName: eventName
+          AttributeType: S
+      KeySchema:
+        - AttributeName: contractAddress
+          KeyType: HASH
+        - AttributeName: eventName
+          KeyType: RANGE
+      ProvisionedThroughput:
+        !If
+          - IsProdStack
+          - !Ref "AWS::NoValue"
+          -
+            ReadCapacityUnits: !Ref ReadCapacityUnits
+            WriteCapacityUnits: !Ref WriteCapacityUnits
+
+Outputs:
+  AddressesTableName:
+    Value: !Ref AddressTable
+    Description: Wallet addresses dynamodb table name
+  AddressesTableArn:
+    Value: !GetAtt AddressTable.Arn
+    Description: Wallet addresses dynamodb table arn
+  BlockCounterTableName:
+    Value: !Ref BlockCounterTable
+    Description: Listener event block counter dynamodb table name
+  BlockCounterTableArn:
+    Value: !GetAtt BlockCounterTable.Arn
+    Description: Listener event block counter dynamodb table arn

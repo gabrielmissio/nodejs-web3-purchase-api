@@ -1,6 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  StageName:
+    Type: String
+    Default: "dev"
+    Description: "The name of the API stage"
+
 Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
@@ -63,7 +69,7 @@ Resources:
             ApiId: !Ref HttpApi
 
 Outputs:
-  ApiGatewayInvokeURL:
+  ApiGatewayAdminInvokeURL:
     Description: "Invoke URL for the API Gateway"
     Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/admin'
 
@@ -71,12 +77,10 @@ Outputs:
     Description: "ARN of the deployed Lambda function"
     Value: !GetAtt AdminLambdaFunction.Arn
 
+  ApiGatewayCustomerInvokeURL:
+    Description: "Invoke URL for the API Gateway"
+    Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/customer'
+
   CustomerLambdaFunctionArn:
     Description: "ARN of the deployed Lambda function"
     Value: !GetAtt CustomerLambdaFunction.Arn
-  
-Parameters:
-  StageName:
-    Type: String
-    Default: "dev"
-    Description: "The name of the API stage"
