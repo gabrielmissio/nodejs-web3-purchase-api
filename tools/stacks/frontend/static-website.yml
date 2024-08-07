@@ -13,26 +13,27 @@ Resources:
     Properties:
       Bucket: !Ref StaticWebsiteBucket
       PolicyDocument:
+        # Version: "2008-10-17"
+        # Id: "PolicyForCloudFrontPrivateContent"
         Statement:
-          - Action: s3:GetObject
-            Effect: Allow
-            Resource: !Join
-              - ""
-              - - "arn:aws:s3:::"
-                - !Ref StaticWebsiteBucket
-                - "/*"
+          - Sid: "AllowCloudFrontServicePrincipal"
+            Effect: "Allow"
             Principal:
-              CanonicalUser: !GetAtt CloudFrontOriginAccessIdentity.S3CanonicalUserId
+              Service: cloudfront.amazonaws.com
+            Action: "s3:GetObject"
+            Resource: !Sub "arn:aws:s3:::${StaticWebsiteBucket}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
-  CloudFrontOriginAccessIdentity:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
     Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: !Join
-          - "Access "
-          - - ""
-            - !Ref StaticWebsiteBucket
-            - " bucket"
+      OriginAccessControlConfig:
+        Name: !Sub "${AppName}-oac-${StageName}"
+        SigningProtocol: sigv4
+        SigningBehavior: always
+        OriginAccessControlOriginType: s3
 
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
@@ -45,7 +46,8 @@ Resources:
           - Id: !Ref StaticWebsiteBucket
             DomainName: !GetAtt StaticWebsiteBucket.RegionalDomainName
             S3OriginConfig:
-              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}"
+              OriginAccessIdentity: ""
+            OriginAccessControlId: !Ref CloudFrontOriginAccessControl
         DefaultRootObject: index.html
         DefaultCacheBehavior:
           TargetOriginId: !Ref StaticWebsiteBucket
@@ -64,21 +66,3 @@ Resources:
         PriceClass: PriceClass_All
         ViewerCertificate:
           CloudFrontDefaultCertificate: true
-
-Outputs:
-  StaticWebsiteBucketName:
-    Value: !Ref StaticWebsiteBucket
-    Export:
-      Name: !Sub ${AppName}-web-app-bucket-name-${StageName}
-  StaticWebsiteBucketRegionalDomainName:
-    Value: !GetAtt StaticWebsiteBucket.RegionalDomainName
-    Export:
-      Name: !Sub ${AppName}-web-app-bucket-regional-domain-name-${StageName}
-  CloudFrontDistributionDomainName:
-    Value: !GetAtt CloudFrontDistribution.DomainName
-    Export:
-      Name: !Sub ${AppName}-web-app-cloudfront-domain-name-${StageName}
-  CloudFrontOriginAccessIdentityS3CanonicalUserId:
-    Value: !GetAtt CloudFrontOriginAccessIdentity.S3CanonicalUserId
-    Export:
-      Name: !Sub ${AppName}-web-app-cloudfront-S3-canonical-user-id-${StageName}
