@@ -1,6 +1,7 @@
 temp
 .env
 .env.keys
+.serverless
 node_modules
 blockchain/cache
 blockchain/artifacts
