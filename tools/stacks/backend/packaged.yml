@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+        AllowHeaders:
+        - Content-Type
+        - Authorization
+        AllowOrigins:
+        - '*'
+      StageName:
+        Ref: StageName
+    Metadata:
+      SamResourceId: HttpApi
+  AdminLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apps/admin/index.handler
+      Runtime: nodejs18.x
+      CodeUri: s3://my-temp-deployment-bucket/448946f2f12d454c66fa77935e6ea90f
+      MemorySize: 128
+      Timeout: 5
+      Environment:
+        Variables:
+          STAGE:
+            Ref: StageName
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      Events:
+        ApiEventAdmin:
+          Type: HttpApi
+          Properties:
+            Path: /admin
+            Method: ANY
+            ApiId:
+              Ref: HttpApi
+        ApiEventAdminProxy:
+          Type: HttpApi
+          Properties:
+            Path: /admin/{proxy+}
+            Method: ANY
+            ApiId:
+              Ref: HttpApi
+    Metadata:
+      SamResourceId: AdminLambdaFunction
+  CustomerLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apps/customer/index.handler
+      Runtime: nodejs18.x
+      CodeUri: s3://my-temp-deployment-bucket/448946f2f12d454c66fa77935e6ea90f
+      MemorySize: 128
+      Timeout: 5
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      Events:
+        ApiEventAdmin:
+          Type: HttpApi
+          Properties:
+            Path: /customer
+            Method: ANY
+            ApiId:
+              Ref: HttpApi
+        ApiEventAdminProxy:
+          Type: HttpApi
+          Properties:
+            Path: /customer/{proxy+}
+            Method: ANY
+            ApiId:
+              Ref: HttpApi
+    Metadata:
+      SamResourceId: CustomerLambdaFunction
+Outputs:
+  ApiGatewayInvokeURL:
+    Description: Invoke URL for the API Gateway
+    Value:
+      Fn::Sub: https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/admin
+  AdminLambdaFunctionArn:
+    Description: ARN of the deployed Lambda function
+    Value:
+      Fn::GetAtt:
+      - AdminLambdaFunction
+      - Arn
+  CustomerLambdaFunctionArn:
+    Description: ARN of the deployed Lambda function
+    Value:
+      Fn::GetAtt:
+      - CustomerLambdaFunction
+      - Arn
+Parameters:
+  StageName:
+    Type: String
+    Default: dev
+    Description: The name of the API stage

@@ -1,10 +1,10 @@
 const router = require('express').Router()
-const authMiddleware = require('./middlewares/auth')
-const validatorMiddleware = require('./middlewares/validator')
-const authController = require('./presentation/controllers/auth-controller')
-const authValidations = require('./presentation/validations/auth-validations')
-const purchaseController = require('./presentation/controllers/purchase-controller')
-const purchaseValidations = require('./presentation/validations/purchase-validations')
+const authMiddleware = require('../../middlewares/auth')
+const validatorMiddleware = require('../../middlewares/validator')
+const authController = require('../../presentation/controllers/auth-controller')
+const authValidations = require('../../presentation/validations/auth-validations')
+const purchaseController = require('../../presentation/controllers/purchase-controller')
+const purchaseValidations = require('../../presentation/validations/purchase-validations')
 
 // ** Open endpoints **
 router.get('/health', (req, res) => res.status(200).json({ status: 'ok' }))
@@ -53,5 +53,9 @@ router.post(
   validatorMiddleware(purchaseValidations.settleFunds),
   purchaseController.settleFunds,
 )
+
+router.get('*',function (req, res) {
+  return res.status(200).json({ message: 'You should not be here' })
+})
 
 module.exports = router

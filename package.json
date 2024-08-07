@@ -4,7 +4,6 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev:api": "dotenvx run -- nodemon ./api/src/server.js",
     "dev:front": "http-server -o ./frontend/public -p 3001",
     "hardhat": "dotenvx run -- hardhat --config blockchain/hardhat.config.js",
     "lint": "eslint",
@@ -15,7 +14,6 @@
   "devDependencies": {
     "@dotenvx/dotenvx": "^0.44.1",
     "@eslint/js": "^9.3.0",
-    "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "eslint": "^9.3.0",
     "globals": "^15.2.0",
     "hardhat": "^2.22.4",
@@ -26,8 +24,6 @@
   },
   "dependencies": {
     "ethers": "^6.12.1",
-    "express": "^4.19.2",
-    "joi": "^17.13.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.0"
   }
