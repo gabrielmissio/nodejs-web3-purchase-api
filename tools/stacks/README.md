@@ -77,15 +77,15 @@ export DEPLOYMENT_BUCKET_NAME=$(
 ```bash
 sam package --template-file lambda-functions.yml \
     --output-template-file .serverless/lambda-functions.yml \
-    --s3-bucket my-temp-deployment-bucket
+    --s3-bucket ${DEPLOYMENT_BUCKET_NAME}
 ```
 
 ```bash
-sam deploy --template-file .serverless/lambda-functions.yml \
+sam deploy --template-file lambda-functions.yml \
     --stack-name ${APP_NAME}-Lambdas-${STAGE} \
-    --s3-bucket my-temp-deployment-bucket \
+    --s3-bucket ${DEPLOYMENT_BUCKET_NAME} \
     --capabilities CAPABILITY_IAM \
-    --parameter-overrides StageName=${STAGE} AppName=MyApiName
+    --parameter-overrides StageName=${STAGE} AppName=${APP_NAME}
 ```
 
 ## Frontend

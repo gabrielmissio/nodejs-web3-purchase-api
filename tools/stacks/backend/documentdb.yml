@@ -1,6 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: DocumentDB Free Tier Compatible Setup using Default VPC without Input Parameters
 
+Parameters:
+  AppName:
+    Description: The app of the stack
+    Type: String
+
 Resources:
   # Automatically fetch the default VPC ID
   DefaultVPC:
@@ -70,30 +75,34 @@ Resources:
   MyDocDBInstance:
     Type: AWS::DocDB::DBInstance
     Properties:
-  #     DBInstanceClass: db.r5.large  # Instance class suited for production workloads
+      # DBInstanceClass: db.r5.large  # Instance class suited for production workloads
       DBInstanceClass: db.t3.medium
       DBClusterIdentifier: !Ref MyDocDBCluster
       DBInstanceIdentifier: MyDocumentDBInstance
       PreferredMaintenanceWindow: Sun:06:00-Sun:07:00  # Maintenance window
       AutoMinorVersionUpgrade: true  # Enable automatic minor version upgrades
-      # PubliclyAccessible: false  # Ensure the instance is not accessible from th
-      # Engine: docdb
-      # DBClusterIdentifier: !Ref MyDocDBCluster
-      # DBInstanceIdentifier: MyDocumentDBInstance
 
 Outputs:
   DocumentDBEndpoint:
     Description: Endpoint for connecting to the DocumentDB cluster
     Value: !GetAtt MyDocDBCluster.Endpoint
+    Export:
+      Name: !Sub ${AppName}-DocumentDBEndpoint
 
   VPCId:
     Description: The VPC ID where the DocumentDB cluster is deployed
     Value: !Ref DefaultVPC
+    Export:
+      Name: !Sub ${AppName}-VPCId
 
   SubnetIds:
     Description: Subnet IDs where the DocumentDB cluster is deployed
     Value: !Join [",", [!Ref DefaultSubnet1, !Ref DefaultSubnet2]]
+    Export:
+      Name: !Sub ${AppName}-SubnetIds
 
   LambdaSecurityGroupId:
     Description: Security Group ID for Lambdas and EC2 instances accessing DocumentDB
     Value: !Ref MySecurityGroup
+    Export:
+      Name: !Sub ${AppName}-LambdaSecurityGroupId
