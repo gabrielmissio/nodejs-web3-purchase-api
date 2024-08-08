@@ -45,12 +45,12 @@ aws cloudformation describe-stacks \
 ```bash
 aws cloudformation create-stack \
     --region ${REGION} \
-    --stack-name ${APP_NAME}-DocumentDB-${STAGE} \
+    --stack-name ${APP_NAME}-DocumentDB \
     --template-body file://tools/stacks/backend/documentdb.yml \
     --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
 ```
 
-### DynamoDB Tables
+<!-- ### DynamoDB Tables
 
 ```bash
 aws cloudformation create-stack \
@@ -58,7 +58,7 @@ aws cloudformation create-stack \
     --stack-name ${APP_NAME}-DynamodbTables-${STAGE} \
     --template-body file://tools/stacks/backend/dynamodb-tables.yml \
     --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
-```
+``` -->
 
 ### Lambda Functions (and API Gateway)
 

@@ -52,6 +52,13 @@ Resources:
             'Fn::Sub': '${AppName}-DocumentDBEndpoint'
       Policies:
         - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 
+                - "secretsmanager:GetSecretValue"
+              Resource: "*"
+
       Events:
         ApiEventAdmin:
           Type: HttpApi
@@ -98,6 +105,12 @@ Resources:
             'Fn::Sub': '${AppName}-DocumentDBEndpoint'
       Policies:
         - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 
+                - "secretsmanager:GetSecretValue"
+              Resource: "*"
       Events:
         ApiEventAdmin:
           Type: HttpApi

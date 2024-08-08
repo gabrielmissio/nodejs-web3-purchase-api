@@ -1,0 +1,82 @@
+Parameters:
+  AppName:
+    Description: The app of the stack
+    Type: String
+  # VpcCIDR:
+  #   Type: String
+  #   Default: "10.0.0.0/16"
+  #   AllowedPattern: '(\d{1,3}\.){3}\d{1,3}\/\d{2}$'
+  #   ConstraintDescription: Must be a valid IP Cidr block.
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.1.0/24"
+      AvailabilityZone: !Select [0, !GetAZs '']
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.2.0/24"
+      AvailabilityZone: !Select [1, !GetAZs '']
+
+  # Security Group for Lambda and EC2 to access DocumentDB
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow inbound access to DocumentDB from Lambda and EC2
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27017
+          CidrIp: 0.0.0.0/0 # Adjust according to your security requirements
+
+  SecretsManagerVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !GetAtt SecurityGroup.GroupId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.secretsmanager"
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+
+Outputs:
+  VPCId:
+    Description: The VPC ID where the DocumentDB cluster is deployed
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${AppName}-VPCId
+
+  PrivateSubnetIds:
+    Description: Subnet IDs where the DocumentDB cluster is deployed
+    Value: !Join [",", [!Ref PrivateSubnet1, !Ref PrivateSubnet2]]
+    Export:
+      Name: !Sub ${AppName}-PrivateSubnetIds
+
+  LambdaSecurityGroupId:
+    Description: Security Group ID for Lambdas and EC2 instances accessing DocumentDB
+    Value: !Ref SecurityGroup
+    Export:
+      Name: !Sub ${AppName}-LambdaSecurityGroupId
+
+  SecretsManagerVPCEndpointId:
+    Description: ID of the Secrets Manager Interface Endpoint
+    Value: !Ref SecretsManagerVPCEndpoint
+    Export:
+      Name: !Sub "${AppName}-SecretsManagerVPCEndpointId"
