@@ -34,10 +34,10 @@ Conditions:
   IsProdStack: !Equals [ !Ref StageName, 'prod' ]
 
 Resources:
-  AddressTable:
+  PurchaseRecordsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${AppName}-WalletAddresses-${StageName}
+      TableName: !Sub ${AppName}-PurchaseRecords-${StageName}
       BillingMode: !If [IsProdStack, PAY_PER_REQUEST, PROVISIONED]
       AttributeDefinitions:
         - AttributeName: PK
