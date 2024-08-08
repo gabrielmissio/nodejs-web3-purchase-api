@@ -27,7 +27,7 @@ Resources:
       Runtime: nodejs18.x
       CodeUri: ../../../backend/src
       MemorySize: 128
-      Timeout: 5
+      Timeout: 20
       VpcConfig:
         SecurityGroupIds: 
           - !ImportValue 
@@ -45,15 +45,6 @@ Resources:
               - ","
               - !ImportValue 
                 'Fn::Sub': '${AppName}-SubnetIds'
-        # SubnetIds:
-        #   - !Select [0, !Split [",", !ImportValue !Sub '${AppName}-SubnetIds']]
-        #   - !Select [1, !Split [",", !ImportValue !Sub '${AppName}-SubnetIds']]
-      # VpcConfig:
-      #   SecurityGroupIds: !ImportValue 
-      #     'Fn::Sub': '${AppName}-DocumentDBEndpoint'
-      #   SubnetIds: 
-      #     - !Select [0, !Split [",", !ImportValue MyDocumentDB-SubnetIds]]
-      #     - !Select [1, !Split [",", !ImportValue MyDocumentDB-SubnetIds]]
       Environment:
         Variables:
           STAGE: !Ref StageName
@@ -82,10 +73,29 @@ Resources:
       Runtime: nodejs18.x
       CodeUri: ../../../backend/src
       MemorySize: 128
-      Timeout: 5
+      Timeout: 20
+      VpcConfig:
+        SecurityGroupIds: 
+          - !ImportValue 
+            'Fn::Sub': '${AppName}-LambdaSecurityGroupId'
+        SubnetIds:
+          - !Select 
+            - 0
+            - !Split 
+              - ","
+              - !ImportValue 
+                'Fn::Sub': '${AppName}-SubnetIds'
+          - !Select 
+            - 1
+            - !Split 
+              - ","
+              - !ImportValue 
+                'Fn::Sub': '${AppName}-SubnetIds'
       Environment:
         Variables:
           STAGE: !Ref StageName
+          DOCUMENTDB_ENDPOINT: !ImportValue 
+            'Fn::Sub': '${AppName}-DocumentDBEndpoint'
       Policies:
         - AWSLambdaBasicExecutionRole
       Events:
