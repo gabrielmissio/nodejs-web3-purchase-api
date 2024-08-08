@@ -28,6 +28,8 @@ Resources:
       Environment:
         Variables:
           STAGE: !Ref StageName
+          # BLOCK_COUNTER_TABLE_NAME: !ImportValue 
+          #   'Fn::Sub': '${AppName}-BlockCounterTableName-${StageName}'
       Policies:
         - AWSLambdaBasicExecutionRole
       Events:
@@ -52,6 +54,9 @@ Resources:
       CodeUri: ../../../backend/src
       MemorySize: 128
       Timeout: 5
+      Environment:
+        Variables:
+          STAGE: !Ref StageName
       Policies:
         - AWSLambdaBasicExecutionRole
       Events:

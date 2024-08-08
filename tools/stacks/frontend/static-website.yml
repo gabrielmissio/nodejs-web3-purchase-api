@@ -34,7 +34,7 @@ Resources:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
       OriginAccessControlConfig:
-        Name: !Sub "${AppName}-oac-${StageName}"
+        Name: !Sub "${AppName}-OAC-${StageName}"
         SigningProtocol: sigv4
         SigningBehavior: always
         OriginAccessControlOriginType: s3
@@ -44,7 +44,7 @@ Resources:
     Properties:
       DistributionConfig:
         Enabled: true
-        Comment: !Sub "${AppName}-distribution-${StageName}"
+        Comment: !Sub "${AppName}-Distribution-${StageName}"
         HttpVersion: http2
         Origins:
           - Id: !Ref StaticWebsiteBucket

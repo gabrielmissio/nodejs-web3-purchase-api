@@ -100,12 +100,20 @@ Outputs:
   AddressesTableName:
     Value: !Ref AddressTable
     Description: Wallet addresses dynamodb table name
+    Export:
+      Name: !Sub ${AppName}-AddressesTableName-${StageName}
   AddressesTableArn:
     Value: !GetAtt AddressTable.Arn
     Description: Wallet addresses dynamodb table arn
+    Export:
+      Name: !Sub ${AppName}-AddressesTableArn-${StageName}
   BlockCounterTableName:
     Value: !Ref BlockCounterTable
     Description: Listener event block counter dynamodb table name
+    Export:
+      Name: !Sub ${AppName}-BlockCounterTableName-${StageName}
   BlockCounterTableArn:
     Value: !GetAtt BlockCounterTable.Arn
     Description: Listener event block counter dynamodb table arn
+    Export:
+      Name: !Sub ${AppName}-BlockCounterTableArn-${StageName}

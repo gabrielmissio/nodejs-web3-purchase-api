@@ -16,7 +16,7 @@ if [ -z "$stage" ]; then
     stage=""
 fi
 
-STACK_NAME="${appName}-S3ConfigBucket"
+STACK_NAME="${appName}-S3DeploymentBucket"
 S3_BUCKET=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --region "$region" --query "Stacks[0].Outputs[?OutputKey=='S3BucketName'].OutputValue" --output text)
 
 if [ -z "$S3_BUCKET" ]; then

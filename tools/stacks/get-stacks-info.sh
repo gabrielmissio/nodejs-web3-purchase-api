@@ -25,7 +25,7 @@ get_output_value() {
 }
 
 # Define stack names
-s3_config_bucket_stack="${appName}-S3ConfigBucket"
+s3_config_bucket_stack="${appName}-S3DeploymentBucket"
 wallet_dynamodb_tables_stack="${appName}-WalletDynamodbTables-${stage}"
 listener_dynamodb_tables_stack="${appName}-ListenerDynamodbTables-${stage}"
 
@@ -46,6 +46,6 @@ s3_config_bucket_name=$(get_output_value "$s3_config_bucket_outputs" "S3BucketNa
 wallet_addresses_dynamodb_table_name=$(get_output_value "$wallet_dynamodb_table_outputs" "AddressesTableName")
 listener_blockcounter_dynamodb_table_name=$(get_output_value "$listener_dynamodb_table_outputs" "BlockCounterTableName")
 
-echo "ConfigBucketName: $s3_config_bucket_name"
+echo "DeploymentBucketName: $s3_config_bucket_name"
 echo "WalletAddressesTableName: $wallet_addresses_dynamodb_table_name"
 echo "ListenerBlockcounterTableName: $listener_blockcounter_dynamodb_table_name"

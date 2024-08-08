@@ -1,3 +1,8 @@
+ - Docker
+ - Node.js
+ - [AWS CLI](https://docs.aws.amazon.com/pt_br/cli/latest/userguide/getting-started-install.html)
+ - [AWS SAN](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
+
 # Stacks
 
 Carregar as variáveis de ambiente:
@@ -5,7 +10,7 @@ Carregar as variáveis de ambiente:
 ```bash
 export STAGE=dev
 export REGION=us-east-1
-export APP_NAME=web3-app
+export APP_NAME=Web3App
 ```
 
 ## Blockchain
@@ -22,7 +27,7 @@ Deploy the config bucket:
 aws cloudformation create-stack \
     --region ${REGION} \
     --stack-name ${APP_NAME}-S3DeploymentBucket \
-    --template-body file://tools/stacks/global/config-bucket.yml \
+    --template-body file://tools/stacks/backend/deployment-bucket.yml \
     --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
 ```
 
@@ -46,6 +51,18 @@ aws cloudformation create-stack \
 ```
 
 ### Lambda Functions (and API Gateway)
+
+Carregar nome do bucket S3
+
+```bash
+export DEPLOYMENT_BUCKET_NAME=$(
+    aws cloudformation describe-stacks \
+    --region ${REGION} \
+    --stack-name ${APP_NAME}-S3DeploymentBucket \
+    --query 'Stacks[0].Outputs[1].OutputValue' \
+    --output text
+)
+```
 
 ```bash
 sam package --template-file lambda-functions.yml \
