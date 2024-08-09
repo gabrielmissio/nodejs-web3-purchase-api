@@ -18,16 +18,46 @@ export APP_NAME=Web3App
 ### VPC
 
 ```bash
-aws cloudformation create-stack \
+aws cloudformation update-stack \
     --region ${REGION} \
     --stack-name ${APP_NAME}-VPC \
     --template-body file://tools/stacks/global/vpc.yml \
     --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
 ```
 
+### Config Bucket
+
+Deploy the config bucket:
+
+```bash
+aws cloudformation create-stack \
+    --region ${REGION} \
+    --stack-name ${APP_NAME}-S3ConfigBucket \
+    --template-body file://tools/stacks/global/config-bucket.yml \
+    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
+```
+
+Get stack outputs (bucket name and bucket arn):
+
+```bash
+aws cloudformation describe-stacks \
+    --region ${REGION} \
+    --stack-name ${APP_NAME}-S3ConfigBucket \
+    --query 'Stacks[0].Outputs'
+```
+
 ## Blockchain
 
-Lorem ipsum
+### RPC Node
+
+```bash
+aws cloudformation create-stack \
+    --region ${REGION} \
+    --stack-name ${APP_NAME}-EC2Instances \
+    --template-body file://tools/stacks/backend/ec2-instances.yml \
+    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME} \
+    --capabilities CAPABILITY_IAM
+```
 
 ## Backend
 
@@ -42,27 +72,6 @@ aws cloudformation create-stack \
     --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
 ```
 
-### Deployment Bucket
-
-Deploy the config bucket:
-
-```bash
-aws cloudformation create-stack \
-    --region ${REGION} \
-    --stack-name ${APP_NAME}-S3DeploymentBucket \
-    --template-body file://tools/stacks/backend/deployment-bucket.yml \
-    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
-```
-
-Get stack outputs (bucket name and bucket arn):
-
-```bash
-aws cloudformation describe-stacks \
-    --region ${REGION} \
-    --stack-name ${APP_NAME}-S3DeploymentBucket \
-    --query 'Stacks[0].Outputs'
-```
-
 ### Lambda Functions (and API Gateway)
 
 Carregar nome do bucket S3
@@ -71,7 +80,7 @@ Carregar nome do bucket S3
 export DEPLOYMENT_BUCKET_NAME=$(
     aws cloudformation describe-stacks \
     --region ${REGION} \
-    --stack-name ${APP_NAME}-S3DeploymentBucket \
+    --stack-name ${APP_NAME}-S3ConfigBucket \
     --query 'Stacks[0].Outputs[1].OutputValue' \
     --output text
 )
@@ -80,13 +89,15 @@ export DEPLOYMENT_BUCKET_NAME=$(
 ```bash
 sam package --template-file lambda-functions.yml \
     --output-template-file .serverless/lambda-functions.yml \
-    --s3-bucket ${DEPLOYMENT_BUCKET_NAME}
+    --s3-bucket ${DEPLOYMENT_BUCKET_NAME} \
+    --s3-prefix sam/${APP_NAME}/${STAGE}/lambda-functions
 ```
 
 ```bash
 sam deploy --template-file lambda-functions.yml \
     --stack-name ${APP_NAME}-Lambdas-${STAGE} \
     --s3-bucket ${DEPLOYMENT_BUCKET_NAME} \
+    --s3-prefix sam/${APP_NAME}/${STAGE}/lambda-functions \
     --capabilities CAPABILITY_IAM \
     --parameter-overrides StageName=${STAGE} AppName=${APP_NAME}
 ```

@@ -41,6 +41,13 @@ Resources:
           ToPort: 27017
           CidrIp: 0.0.0.0/0 # Adjust according to your security requirements
 
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      VpcEndpointType: Gateway
+      VpcId: !Ref VPC
+
   SecretsManagerVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -72,6 +79,12 @@ Outputs:
     Value: !Ref SecurityGroup
     Export:
       Name: !Sub ${AppName}-SecurityGroupId
+
+  S3VPCEndpointId:
+    Description: ID of the S3 Gateway Endpoint
+    Value: !Ref S3VPCEndpoint
+    Export:
+      Name: !Sub ${AppName}-S3VPCEndpointId
 
   SecretsManagerVPCEndpointId:
     Description: ID of the Secrets Manager Interface Endpoint

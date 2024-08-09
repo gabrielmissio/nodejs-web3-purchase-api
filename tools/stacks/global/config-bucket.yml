@@ -4,7 +4,7 @@ Parameters:
     Type: String
 
 Resources:
-  DeploymentBucket:
+  ConfigBucket:
     Type: AWS::S3::Bucket
     Properties:
       PublicAccessBlockConfiguration:
@@ -15,10 +15,10 @@ Resources:
 
 Outputs:
   S3BucketArn:
-    Value: !GetAtt DeploymentBucket.Arn
+    Value: !GetAtt ConfigBucket.Arn
     Export:
-      Name: !Sub ${AppName}-S3DeploymentBucketArn
+      Name: !Sub ${AppName}-S3ConfigBucketArn
   S3BucketName:
-    Value: !Ref DeploymentBucket
+    Value: !Ref ConfigBucket
     Export:
-      Name: !Sub ${AppName}-S3DeploymentBucketName
+      Name: !Sub ${AppName}-S3ConfigBucketName
