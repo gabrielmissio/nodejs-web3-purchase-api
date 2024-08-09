@@ -5,6 +5,13 @@ Parameters:
   AppName:
     Type: String
     Description: The application name used for exporting/importing stack outputs.
+  StageName:
+    Type: String
+    Default: "dev"
+    Description: "The name of the API stage"
+  S3BucketName:
+    Type: String
+    Description: The name of the S3 bucket used for storing application artifacts.
   LatestAmiId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
@@ -77,13 +84,43 @@ Resources:
         Fn::Base64: 
           !Sub |
             #!/bin/bash
+            # Update the package repository
             yum update -y
-            yum install -y amazon-linux-extras
-            amazon-linux-extras install -y docker
-            service docker start
-            usermod -aG docker ec2-user
-            yum install -y git
-            echo $(aws s3 ls)
+
+            # Install Node.js from the Amazon Linux 2 repository
+            yum install -y nodejs
+
+            # Install the AWS CLI (v2) from the Amazon Linux 2 repository
+            yum install -y aws-cli
+
+            # Confirm Node.js and npm installation
+            node -v
+            npm -v
+
+            # Set up environment variables
+            #export AppName=${AppName}
+            #export StageName=${StageName}
+
+            # Create directories
+            mkdir -p /home/ec2-user/${AppName}/${StageName}/listener
+
+            # Download application zip build from S3
+            aws s3 cp s3://${S3BucketName}/ec2/${AppName}/${StageName}/listener/listener-build.zip /home/ec2-user/${AppName}/${StageName}/listener/
+
+            # Unzip the application build
+            unzip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip -d /home/ec2-user/${AppName}/${StageName}/listener
+
+            # Remove the application zip build
+            rm /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
+
+            # Change to the application directory
+            cd /home/ec2-user/${AppName}/${StageName}/listener
+
+            # Run the Node.js application as a daemon process using nohup
+            nohup node apps/listener/index.js > /home/ec2-user/${AppName}/${StageName}/listener/logs.txt 2>&1 &
+
+            # Output confirmation message
+            echo "Node.js application started as a daemon process"
 
 Outputs:
   EC2RPCNodeId:

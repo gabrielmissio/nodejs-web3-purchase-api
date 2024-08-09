@@ -51,11 +51,22 @@ aws cloudformation describe-stacks \
 ### RPC Node
 
 ```bash
+export CONFIG_BUCKET_NAME=$(
+    aws cloudformation describe-stacks \
+    --region ${REGION} \
+    --stack-name ${APP_NAME}-S3ConfigBucket \
+    --query 'Stacks[0].Outputs[1].OutputValue' \
+    --output text
+)
+```
+
+```bash
 aws cloudformation create-stack \
     --region ${REGION} \
     --stack-name ${APP_NAME}-EC2Instances \
     --template-body file://tools/stacks/backend/ec2-instances.yml \
     --parameters ParameterKey=AppName,ParameterValue=${APP_NAME} \
+        ParameterKey=S3BucketName,ParameterValue=${CONFIG_BUCKET_NAME} \
     --capabilities CAPABILITY_IAM
 ```
 
@@ -129,4 +140,10 @@ sh ./tools/get-stacks-info.sh $APP_NAME $REGION $STAGE
 
 ```bash
 sh ./tools/abi-sync.sh $APP_NAME $REGION $STAGE
+```
+
+## Sync listener files with S3
+
+```bash
+sh ./tools/stacks/deploy-listener.sh $APP_NAME $REGION $STAGE
 ```
