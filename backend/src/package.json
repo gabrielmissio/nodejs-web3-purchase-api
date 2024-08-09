@@ -14,5 +14,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.0",
     "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.624.0"
   }
 }

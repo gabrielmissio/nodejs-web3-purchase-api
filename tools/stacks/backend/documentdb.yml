@@ -76,3 +76,9 @@ Outputs:
     Value: !GetAtt DocDBCluster.Endpoint
     Export:
       Name: !Sub ${AppName}-DocumentDBEndpoint
+  
+  DocumentDBSecretArn:
+    Description: ARN of the secret containing DocumentDB credentials
+    Value: !Ref DocumentDBSecret
+    Export:
+      Name: !Sub ${AppName}-DocumentDBSecretArn

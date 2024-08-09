@@ -1,12 +1,27 @@
 const mongoose = require('mongoose')
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager')
 
-// Construct the DocumentDB connection URI
-const username = 'masterAdmin'
-const password = 'SecurePassword123'
-const clusterEndpoint = process.env.DOCUMENTDB_ENDPOINT // Passed as an environment variable
-const dbName = 'mydatabase' // Replace with your actual database name
+const client = new SecretsManagerClient({ region: process.env.AWS_REGION })
 
-const mongoUri = `mongodb://${username}:${password}@${clusterEndpoint}:27017/${dbName}?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`
+async function getSecret(secretArn) {
+  try {
+    console.log('Getting secret...')
+    const command = new GetSecretValueCommand({ SecretId: secretArn })
+    const response = await client.send(command)
+    console.log('Got secret...')
+
+    if (response.SecretString) {
+      return JSON.parse(response.SecretString)
+    } else {
+      throw new Error('SecretString not found')
+    }
+  } catch (error) {
+    console.error('Error getting secret:', error)
+    throw error
+  }
+}
+
+
 
 let isConnected = false
 
@@ -15,6 +30,13 @@ const connectToDatabase = async () => {
     console.log('=> using existing database connection')
     return Promise.resolve()
   }
+
+  // Construct the DocumentDB connection URI
+  const secret = await getSecret(process.env.DOCUMENTDB_SECRET_ARN)
+  const { username, password, port } = secret
+  const clusterEndpoint = process.env.DOCUMENTDB_ENDPOINT // Passed as an environment variable
+  const dbName = 'mydatabase' // Replace with your actual database name
+  const mongoUri = `mongodb://${username}:${password}@${clusterEndpoint}:${port}/${dbName}?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`
 
   console.log('=> using new database connection')
   await mongoose.connect(mongoUri, {
