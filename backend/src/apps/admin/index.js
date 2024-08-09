@@ -21,8 +21,6 @@ async function getSecret(secretArn) {
   }
 }
 
-
-
 let isConnected = false
 
 const connectToDatabase = async () => {
@@ -31,12 +29,15 @@ const connectToDatabase = async () => {
     return Promise.resolve()
   }
 
-  // Construct the DocumentDB connection URI
   const secret = await getSecret(process.env.DOCUMENTDB_SECRET_ARN)
   const { username, password, port } = secret
+
+  // Construct the DocumentDB connection URI
+  const encodedUsername = encodeURIComponent(username)
+  const encodedPassword = encodeURIComponent(password)
   const clusterEndpoint = process.env.DOCUMENTDB_ENDPOINT // Passed as an environment variable
   const dbName = 'mydatabase' // Replace with your actual database name
-  const mongoUri = `mongodb://${username}:${password}@${clusterEndpoint}:${port}/${dbName}?ssl=true`
+  const mongoUri = `mongodb://${encodedUsername}:${encodedPassword}@${clusterEndpoint}:${port}/${dbName}?ssl=true`
 
   console.log('=> using new database connection')
   await mongoose.connect(mongoUri, {
