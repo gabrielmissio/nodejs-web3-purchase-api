@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::SecretsManager-2020-07-23
-Description: DocumentDB Free Tier Compatible Setup
+Description: DocumentDB Free Tier Compatible Setup with Secrets Manager Credentials Rotation
 
 Parameters:
   AppName:
@@ -16,7 +16,42 @@ Parameters:
     ConstraintDescription: "Must begin with a letter and contain only alphanumeric characters."
 
 Resources:
-# Secrets Manager Secret for DocumentDB credentials
+  DocDBCluster:
+    Type: AWS::DocDB::DBCluster
+    Properties:
+      EngineVersion: '4.0.0'
+      MasterUsername: !Sub "{{resolve:secretsmanager:${DocumentDBSecret}:SecretString:username}}"
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${DocumentDBSecret}:SecretString:password}}"
+      DBClusterIdentifier: !Sub ${AppName}-DocumentDBCluster
+      VpcSecurityGroupIds:
+        - !ImportValue
+          'Fn::Sub': '${AppName}-SecurityGroupId'
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      BackupRetentionPeriod: 1
+      PreferredBackupWindow: 03:00-06:00
+      PreferredMaintenanceWindow: Sun:06:00-Sun:07:00
+      StorageEncrypted: true
+
+  DocDBInstance:
+    Type: AWS::DocDB::DBInstance
+    Properties:
+      # DBInstanceClass: db.r5.large  # Instance class suited for production workloads
+      DBInstanceClass: db.t3.medium
+      DBClusterIdentifier: !Ref DocDBCluster
+      DBInstanceIdentifier: !Sub ${AppName}-DocumentDBInstance
+      PreferredMaintenanceWindow: Sun:06:00-Sun:07:00  # Maintenance window
+      AutoMinorVersionUpgrade: true  # Enable automatic minor version upgrades
+
+  DBSubnetGroup:
+    Type: AWS::DocDB::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for DocumentDB cluster
+      SubnetIds: !Split
+        - ","
+        - !ImportValue
+          'Fn::Sub': '${AppName}-PrivateSubnetIds'
+
+  # Secrets Manager Secret for DocumentDB credentials
   DocumentDBSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
@@ -48,57 +83,10 @@ Resources:
         VpcSubnetIds: !ImportValue
           'Fn::Sub': '${AppName}-PrivateSubnetIds'
       RotationRules:
-        AutomaticallyAfterDays: 1  # Adjust the rotation period as needed
+        AutomaticallyAfterDays: 30  # Adjust the rotation period as needed
       # RotationRules:
       #   Duration: 2h
       #   ScheduleExpression: cron(0 8 1 * ? *)
-
-  # # Enable automatic rotation using a pre-built Lambda function
-  # DocumentDBSecretRotationSchedule:
-  #   Type: AWS::SecretsManager::RotationSchedule
-  #   Properties:
-  #     SecretId: !Ref DocumentDBSecret
-  #     RotationLambdaARN: !Sub arn:aws:lambda:${AWS::Region}:aws:function:SecretsManagerMongoDBRotationSingleUser
-  #     RotationRules:
-  #       AutomaticallyAfterDays: 30  # Adjust the rotation period as needed
-
-  # DocumentDB Subnet Group using the default VPC subnets
-  DBSubnetGroup:
-    Type: AWS::DocDB::DBSubnetGroup
-    Properties:
-      DBSubnetGroupDescription: Subnet group for DocumentDB cluster
-      SubnetIds: !Split
-        - ","
-        - !ImportValue
-          'Fn::Sub': '${AppName}-PrivateSubnetIds'
-
-  # DocumentDB Cluster
-  DocDBCluster:
-    Type: AWS::DocDB::DBCluster
-    Properties:
-      EngineVersion: '4.0.0'
-      MasterUsername: !Sub "{{resolve:secretsmanager:${DocumentDBSecret}:SecretString:username}}"
-      MasterUserPassword: !Sub "{{resolve:secretsmanager:${DocumentDBSecret}:SecretString:password}}"
-      DBClusterIdentifier: !Sub ${AppName}-DocumentDBCluster
-      VpcSecurityGroupIds:
-        - !ImportValue
-          'Fn::Sub': '${AppName}-SecurityGroupId'
-      DBSubnetGroupName: !Ref DBSubnetGroup
-      BackupRetentionPeriod: 1
-      PreferredBackupWindow: 03:00-06:00
-      PreferredMaintenanceWindow: Sun:06:00-Sun:07:00
-      StorageEncrypted: true
-
-  # DocumentDB Instance
-  DocDBInstance:
-    Type: AWS::DocDB::DBInstance
-    Properties:
-      # DBInstanceClass: db.r5.large  # Instance class suited for production workloads
-      DBInstanceClass: db.t3.medium
-      DBClusterIdentifier: !Ref DocDBCluster
-      DBInstanceIdentifier: !Sub ${AppName}-DocumentDBInstance
-      PreferredMaintenanceWindow: Sun:06:00-Sun:07:00  # Maintenance window
-      AutoMinorVersionUpgrade: true  # Enable automatic minor version upgrades
 
 Outputs:
   DocumentDBEndpoint:

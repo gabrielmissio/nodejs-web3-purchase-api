@@ -1,7 +1,27 @@
 const mongoose = require('mongoose')
+const { getSecret } = require('./secret-helper')
 
-async function connectDB() {
-  return mongoose.connect(process.env.DATABASE_CONNECTION_STRING)
+let isConnected = false
+
+const connectDB = async () => {
+  if (isConnected) {
+    console.log('=> using existing database connection')
+    return Promise.resolve()
+  }
+
+  const secret = await getSecret(process.env.DOCUMENTDB_SECRET_ARN)
+  const { username, password, port } = secret
+
+  // Construct the DocumentDB connection URI
+  const encodedUsername = encodeURIComponent(username)
+  const encodedPassword = encodeURIComponent(password)
+  const clusterEndpoint = process.env.DOCUMENTDB_ENDPOINT
+  const dbName = 'mydatabase' // Replace with your actual database name
+  const mongoUri = `mongodb://${encodedUsername}:${encodedPassword}@${clusterEndpoint}:${port}/${dbName}?ssl=true`
+
+  console.log('=> using new database connection')
+  await mongoose.connect(mongoUri)
+  isConnected = true
 }
 
 module.exports = { connectDB }
