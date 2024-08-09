@@ -34,7 +34,7 @@ Lorem ipsum
 ### DocumentDB
 
 ```bash
-aws cloudformation create-stack \
+aws cloudformation update-stack \
     --region ${REGION} \
     --stack-name ${APP_NAME}-DocumentDB \
     --template-body file://tools/stacks/backend/documentdb.yml \

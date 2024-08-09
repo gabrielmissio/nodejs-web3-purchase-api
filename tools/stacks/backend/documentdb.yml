@@ -5,8 +5,31 @@ Parameters:
   AppName:
     Description: The app of the stack
     Type: String
+  MasterUsername:
+    Description: The master username for the DocumentDB cluster
+    Type: String
+    MinLength: 1
+    MaxLength: 16
+    Default: masterAdmin
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: "Must begin with a letter and contain only alphanumeric characters."
 
 Resources:
+# Secrets Manager Secret for DocumentDB credentials
+  DocumentDBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ${AppName}/DocumentDBSecret
+      Description: Secret containing DocumentDB credentials
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username": "${MasterUsername}", "port": "27017"}'
+        GenerateStringKey: "password"
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\\'
+      # Tags:
+      #   - Key: Name
+      #     Value: !Sub ${AppName}-DocumentDBSecret
+
   # DocumentDB Subnet Group using the default VPC subnets
   DBSubnetGroup:
     Type: AWS::DocDB::DBSubnetGroup
@@ -23,7 +46,9 @@ Resources:
     Properties:
       EngineVersion: '4.0.0'
       MasterUsername: masterAdmin
-      MasterUserPassword: SecurePassword123
+      # MasterUserPassword: SecurePassword123
+      # MasterUsername: !Sub "{{resolve:secretsmanager:${DocumentDBSecret}:SecretString:username}}"
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${DocumentDBSecret}:SecretString:password}}"
       DBClusterIdentifier: !Sub ${AppName}-DocumentDBCluster
       VpcSecurityGroupIds:
         - !ImportValue
