@@ -34,11 +34,12 @@ Lorem ipsum
 ### DocumentDB
 
 ```bash
-aws cloudformation update-stack \
+aws cloudformation create-stack \
     --region ${REGION} \
     --stack-name ${APP_NAME}-DocumentDB \
     --template-body file://tools/stacks/backend/documentdb.yml \
-    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
+    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME} \
+    --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
 ```
 
 ### Deployment Bucket

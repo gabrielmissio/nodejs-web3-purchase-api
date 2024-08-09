@@ -36,7 +36,7 @@ const connectToDatabase = async () => {
   const { username, password, port } = secret
   const clusterEndpoint = process.env.DOCUMENTDB_ENDPOINT // Passed as an environment variable
   const dbName = 'mydatabase' // Replace with your actual database name
-  const mongoUri = `mongodb://${username}:${password}@${clusterEndpoint}:${port}/${dbName}?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`
+  const mongoUri = `mongodb://${username}:${password}@${clusterEndpoint}:${port}/${dbName}?ssl=true`
 
   console.log('=> using new database connection')
   await mongoose.connect(mongoUri, {
