@@ -31,20 +31,23 @@ Resources:
       VpcConfig:
         SecurityGroupIds: 
           - !ImportValue 
-            'Fn::Sub': '${AppName}-LambdaSecurityGroupId'
-        SubnetIds:
-          - !Select 
-            - 0
-            - !Split 
-              - ","
-              - !ImportValue 
-                'Fn::Sub': '${AppName}-SubnetIds'
-          - !Select 
-            - 1
-            - !Split 
-              - ","
-              - !ImportValue 
-                'Fn::Sub': '${AppName}-SubnetIds'
+            'Fn::Sub': '${AppName}-SecurityGroupId'
+        SubnetIds: !Split
+          - ","
+          - !ImportValue
+            'Fn::Sub': '${AppName}-PrivateSubnetIds'
+          # - !Select 
+          #   - 0
+          #   - !Split 
+          #     - ","
+          #     - !ImportValue 
+          #       'Fn::Sub': '${AppName}-SubnetIds'
+          # - !Select 
+          #   - 1
+          #   - !Split 
+          #     - ","
+          #     - !ImportValue 
+          #       'Fn::Sub': '${AppName}-SubnetIds'
       Environment:
         Variables:
           STAGE: !Ref StageName
@@ -84,20 +87,27 @@ Resources:
       VpcConfig:
         SecurityGroupIds: 
           - !ImportValue 
-            'Fn::Sub': '${AppName}-LambdaSecurityGroupId'
-        SubnetIds:
-          - !Select 
-            - 0
-            - !Split 
-              - ","
-              - !ImportValue 
-                'Fn::Sub': '${AppName}-SubnetIds'
-          - !Select 
-            - 1
-            - !Split 
-              - ","
-              - !ImportValue 
-                'Fn::Sub': '${AppName}-SubnetIds'
+            'Fn::Sub': '${AppName}-SecurityGroupId'
+        SubnetIds: !Split
+          - ","
+          - !ImportValue
+            'Fn::Sub': '${AppName}-PrivateSubnetIds'
+        # SecurityGroupIds: 
+        #   - !ImportValue 
+        #     'Fn::Sub': '${AppName}-LambdaSecurityGroupId'
+        # SubnetIds:
+        #   - !Select 
+        #     - 0
+        #     - !Split 
+        #       - ","
+        #       - !ImportValue 
+        #         'Fn::Sub': '${AppName}-SubnetIds'
+        #   - !Select 
+        #     - 1
+        #     - !Split 
+        #       - ","
+        #       - !ImportValue 
+        #         'Fn::Sub': '${AppName}-SubnetIds'
       Environment:
         Variables:
           STAGE: !Ref StageName

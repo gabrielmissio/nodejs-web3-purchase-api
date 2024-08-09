@@ -2,11 +2,6 @@ Parameters:
   AppName:
     Description: The app of the stack
     Type: String
-  # VpcCIDR:
-  #   Type: String
-  #   Default: "10.0.0.0/16"
-  #   AllowedPattern: '(\d{1,3}\.){3}\d{1,3}\/\d{2}$'
-  #   ConstraintDescription: Must be a valid IP Cidr block.
 
 Resources:
   VPC:
@@ -16,6 +11,9 @@ Resources:
       EnableDnsSupport: true
       EnableDnsHostnames: true
       InstanceTenancy: default
+      Tags:
+        - Key: 'Name'
+          Value: !Sub ${AppName}-VPC
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
@@ -69,14 +67,14 @@ Outputs:
     Export:
       Name: !Sub ${AppName}-PrivateSubnetIds
 
-  LambdaSecurityGroupId:
-    Description: Security Group ID for Lambdas and EC2 instances accessing DocumentDB
+  SecurityGroupId:
+    Description: Security Group ID for accessing DocumentDB and Secrets Manager
     Value: !Ref SecurityGroup
     Export:
-      Name: !Sub ${AppName}-LambdaSecurityGroupId
+      Name: !Sub ${AppName}-SecurityGroupId
 
   SecretsManagerVPCEndpointId:
     Description: ID of the Secrets Manager Interface Endpoint
     Value: !Ref SecretsManagerVPCEndpoint
     Export:
-      Name: !Sub "${AppName}-SecretsManagerVPCEndpointId"
+      Name: !Sub ${AppName}-SecretsManagerVPCEndpointId

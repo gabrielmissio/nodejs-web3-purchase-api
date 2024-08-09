@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: DocumentDB Free Tier Compatible Setup using Default VPC without Input Parameters
+Description: DocumentDB Free Tier Compatible Setup
 
 Parameters:
   AppName:
@@ -7,102 +7,47 @@ Parameters:
     Type: String
 
 Resources:
-  # Automatically fetch the default VPC ID
-  DefaultVPC:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: "10.0.0.0/16"
-      EnableDnsSupport: true
-      EnableDnsHostnames: true
-      InstanceTenancy: default
-    DeletionPolicy: Retain
-
-  # Fetch subnets associated with the default VPC
-  DefaultSubnet1:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref DefaultVPC
-      CidrBlock: "10.0.1.0/24"
-      AvailabilityZone: !Select [0, !GetAZs '']
-    DeletionPolicy: Retain
-
-  DefaultSubnet2:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref DefaultVPC
-      CidrBlock: "10.0.2.0/24"
-      AvailabilityZone: !Select [1, !GetAZs '']
-    DeletionPolicy: Retain
-
-  # Security Group for Lambda and EC2 to access DocumentDB
-  MySecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Allow inbound access to DocumentDB from Lambda and EC2
-      VpcId: !Ref DefaultVPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 27017
-          ToPort: 27017
-          CidrIp: 0.0.0.0/0 # Adjust according to your security requirements
-
   # DocumentDB Subnet Group using the default VPC subnets
-  MyDBSubnetGroup:
+  DBSubnetGroup:
     Type: AWS::DocDB::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: Subnet group for DocumentDB cluster
-      SubnetIds:
-        - !Ref DefaultSubnet1
-        - !Ref DefaultSubnet2
+      SubnetIds: !Split
+        - ","
+        - !ImportValue
+          'Fn::Sub': '${AppName}-PrivateSubnetIds'
 
   # DocumentDB Cluster
-  MyDocDBCluster:
+  DocDBCluster:
     Type: AWS::DocDB::DBCluster
     Properties:
       EngineVersion: '4.0.0'
       MasterUsername: masterAdmin
-      MasterUserPassword: MySecurePassword123
-      DBClusterIdentifier: MyDocumentDBCluster
+      MasterUserPassword: SecurePassword123
+      DBClusterIdentifier: !Sub ${AppName}-DocumentDBCluster
       VpcSecurityGroupIds:
-        - !Ref MySecurityGroup
-      DBSubnetGroupName: !Ref MyDBSubnetGroup
+        - !ImportValue
+          'Fn::Sub': '${AppName}-SecurityGroupId'
+      DBSubnetGroupName: !Ref DBSubnetGroup
       BackupRetentionPeriod: 1
       PreferredBackupWindow: 03:00-06:00
       PreferredMaintenanceWindow: Sun:06:00-Sun:07:00
       StorageEncrypted: true
 
   # DocumentDB Instance
-  MyDocDBInstance:
+  DocDBInstance:
     Type: AWS::DocDB::DBInstance
     Properties:
       # DBInstanceClass: db.r5.large  # Instance class suited for production workloads
       DBInstanceClass: db.t3.medium
-      DBClusterIdentifier: !Ref MyDocDBCluster
-      DBInstanceIdentifier: MyDocumentDBInstance
+      DBClusterIdentifier: !Ref DocDBCluster
+      DBInstanceIdentifier: !Sub ${AppName}-DocumentDBInstance
       PreferredMaintenanceWindow: Sun:06:00-Sun:07:00  # Maintenance window
       AutoMinorVersionUpgrade: true  # Enable automatic minor version upgrades
 
 Outputs:
   DocumentDBEndpoint:
     Description: Endpoint for connecting to the DocumentDB cluster
-    Value: !GetAtt MyDocDBCluster.Endpoint
+    Value: !GetAtt DocDBCluster.Endpoint
     Export:
       Name: !Sub ${AppName}-DocumentDBEndpoint
-
-  VPCId:
-    Description: The VPC ID where the DocumentDB cluster is deployed
-    Value: !Ref DefaultVPC
-    Export:
-      Name: !Sub ${AppName}-VPCId
-
-  SubnetIds:
-    Description: Subnet IDs where the DocumentDB cluster is deployed
-    Value: !Join [",", [!Ref DefaultSubnet1, !Ref DefaultSubnet2]]
-    Export:
-      Name: !Sub ${AppName}-SubnetIds
-
-  LambdaSecurityGroupId:
-    Description: Security Group ID for Lambdas and EC2 instances accessing DocumentDB
-    Value: !Ref MySecurityGroup
-    Export:
-      Name: !Sub ${AppName}-LambdaSecurityGroupId

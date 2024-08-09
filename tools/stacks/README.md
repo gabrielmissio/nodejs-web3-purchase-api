@@ -13,11 +13,33 @@ export REGION=us-east-1
 export APP_NAME=Web3App
 ```
 
+## Global
+
+### VPC
+
+```bash
+aws cloudformation create-stack \
+    --region ${REGION} \
+    --stack-name ${APP_NAME}-VPC \
+    --template-body file://tools/stacks/global/vpc.yml \
+    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
+```
+
 ## Blockchain
 
 Lorem ipsum
 
 ## Backend
+
+### DocumentDB
+
+```bash
+aws cloudformation create-stack \
+    --region ${REGION} \
+    --stack-name ${APP_NAME}-DocumentDB \
+    --template-body file://tools/stacks/backend/documentdb.yml \
+    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
+```
 
 ### Deployment Bucket
 
@@ -39,26 +61,6 @@ aws cloudformation describe-stacks \
     --stack-name ${APP_NAME}-S3DeploymentBucket \
     --query 'Stacks[0].Outputs'
 ```
-
-### DocumentDB
-
-```bash
-aws cloudformation create-stack \
-    --region ${REGION} \
-    --stack-name ${APP_NAME}-DocumentDB \
-    --template-body file://tools/stacks/backend/documentdb.yml \
-    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
-```
-
-<!-- ### DynamoDB Tables
-
-```bash
-aws cloudformation create-stack \
-    --region ${REGION} \
-    --stack-name ${APP_NAME}-DynamodbTables-${STAGE} \
-    --template-body file://tools/stacks/backend/dynamodb-tables.yml \
-    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
-``` -->
 
 ### Lambda Functions (and API Gateway)
 
