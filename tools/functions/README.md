@@ -40,37 +40,8 @@ sam deploy --template-file lambda-functions.yml \
     --parameter-overrides StageName=${STAGE} AppName=${APP_NAME}
 ```
 
-## Frontend
-
-### Cloudfront and S3 Bucket
-
 ```bash
-aws cloudformation create-stack \
-    --region ${REGION} \
-    --stack-name ${APP_NAME}-StaticWebsite-${STAGE} \
-    --template-body file://tools/stacks/frontend/static-website.yml \
-    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
-```
-
-
-### Sync frontend build to S3 bucket
-
-## Utils
-
-## Get deployed stacks info
-
-```bash
-sh ./tools/get-stacks-info.sh $APP_NAME $REGION $STAGE
-```
-
-## Sync local ABIs with S3
-
-```bash
-sh ./tools/abi-sync.sh $APP_NAME $REGION $STAGE
-```
-
-## Sync listener files with S3
-
-```bash
-sh ./tools/stacks/deploy-listener.sh $APP_NAME $REGION $STAGE
+aws lambda invoke --function-name Web3App-LambdasUtils-dev-BastionHostLambdaFunction-4E5fQ8sgwKU2 \
+    --payload '{"instanceId": "i-0587ef3cd4a5321c8", "command": "uptime"}' \
+    output.json
 ```
