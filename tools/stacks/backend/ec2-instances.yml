@@ -18,6 +18,21 @@ Parameters:
     Description: "Latest Amazon Linux 2 AMI ID for the region"
 
 Resources:
+  EC2InstanceConnectEndpoint:
+    Type: AWS::EC2::InstanceConnectEndpoint
+    Properties:
+      SubnetId: !Select 
+        - 0
+        - !Split 
+          - ","
+          - !ImportValue 
+            'Fn::Sub': '${AppName}-PrivateSubnetIds'
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+        - !ImportValue 
+            'Fn::Sub': '${AppName}-SecurityGroupId'
+      PreserveClientIp: false
+
   EC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties: 
@@ -33,6 +48,16 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: "${AppName}-SecurityGroupId"
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: "${AppName}-SecurityGroupId"
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
           SourceSecurityGroupId: !ImportValue
             Fn::Sub: "${AppName}-SecurityGroupId"
       Tags:
@@ -55,6 +80,26 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
         - arn:aws:iam::aws:policy/SecretsManagerReadWrite
         - arn:aws:iam::aws:policy/AmazonDocDBFullAccess
+      Policies:
+        - PolicyName: S3AccessPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource:
+                  - !Sub "arn:aws:s3:::${S3BucketName}"
+                  - !Sub "arn:aws:s3:::${S3BucketName}/*"
+        - PolicyName: ListAllS3BucketsPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource: "*"
 
   EC2RPCNodeProfile:
     Type: AWS::IAM::InstanceProfile
@@ -73,54 +118,52 @@ Resources:
         - !Split 
           - ","
           - !ImportValue 
-            'Fn::Sub': '${AppName}-PrivateSubnetIds'      
+            'Fn::Sub': '${AppName}-PrivateSubnetIds'
       # !Select [0, !Split [",", !ImportValue Fn::Sub "${AppName}-PrivateSubnetIds"]]
       ImageId: !Ref LatestAmiId # Amazon Linux 2 AMI (for x86_64) - Free tier eligible
       IamInstanceProfile: !Ref EC2RPCNodeProfile
       Tags:
         - Key: Name
-          Value: !Sub "${AppName}-DocumentDBInstance"
+          Value: !Sub "${AppName}-EC2RPCNodeInstance"
       UserData:
         Fn::Base64: 
           !Sub |
             #!/bin/bash
+
             # Update the package repository
             yum update -y
-
-            # Install Node.js from the Amazon Linux 2 repository
-            yum install -y nodejs
 
             # Install the AWS CLI (v2) from the Amazon Linux 2 repository
             yum install -y aws-cli
 
-            # Confirm Node.js and npm installation
+            # Install Node.js
+            # Create directories
+            mkdir -p /home/ec2-user/downloads
+            mkdir -p /usr/local/lib/nodejs
+
+            # Download Node.js tarball from S3
+            aws s3 cp s3://${S3BucketName}/ec2/Utils/node-v16.20.2-linux-x64.tar.xz /home/ec2-user/downloads/node-v16.20.2-linux-x64.tar.xz
+
+            # Extract Node.js
+            tar -xf /home/ec2-user/downloads/node-v16.20.2-linux-x64.tar.xz -C /usr/local/lib/nodejs --strip-components=1
+
+            # Remove the old Node.js symlinks and create new ones
+            ln -sf /usr/local/lib/nodejs/bin/node /usr/bin/node
+            ln -sf /usr/local/lib/nodejs/bin/npm /usr/bin/npm
+            ln -sf /usr/local/lib/nodejs/bin/npx /usr/bin/npx
+
+            # Verify the installation
             node -v
             npm -v
 
-            # Set up environment variables
-            #export AppName=${AppName}
-            #export StageName=${StageName}
-
-            # Create directories
-            mkdir -p /home/ec2-user/${AppName}/${StageName}/listener
-
-            # Download application zip build from S3
-            aws s3 cp s3://${S3BucketName}/ec2/${AppName}/${StageName}/listener/listener-build.zip /home/ec2-user/${AppName}/${StageName}/listener/
-
-            # Unzip the application build
-            unzip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip -d /home/ec2-user/${AppName}/${StageName}/listener
-
-            # Remove the application zip build
-            rm /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
-
-            # Change to the application directory
-            cd /home/ec2-user/${AppName}/${StageName}/listener
-
-            # Run the Node.js application as a daemon process using nohup
-            nohup node apps/listener/index.js > /home/ec2-user/${AppName}/${StageName}/listener/logs.txt 2>&1 &
-
-            # Output confirmation message
-            echo "Node.js application started as a daemon process"
+            # # Create directories
+            # mkdir -p /home/ec2-user/${AppName}/${StageName}/listener
+            # # Download application zip build from S3
+            # aws s3 cp s3://${S3BucketName}/ec2/${AppName}/${StageName}/listener/listener-build.zip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
+            # # Unzip the application build
+            # unzip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip -d /home/ec2-user/${AppName}/${StageName}/listener
+            # # Remove the application zip build
+            # rm /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
 
 Outputs:
   EC2RPCNodeId:

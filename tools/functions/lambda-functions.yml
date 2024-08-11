@@ -23,10 +23,17 @@ Resources:
         SecurityGroupIds: 
           - !ImportValue 
             'Fn::Sub': '${AppName}-SecurityGroupId'
-        SubnetIds: !Split
-          - ","
-          - !ImportValue
-            'Fn::Sub': '${AppName}-PrivateSubnetIds'
+        SubnetIds:
+          - !Select 
+            - 0
+            - !Split 
+              - ","
+              - !ImportValue 
+                'Fn::Sub': '${AppName}-PrivateSubnetIds'
+        # SubnetIds: !Split
+        #   - ","
+        #   - !ImportValue
+        #     'Fn::Sub': '${AppName}-PrivateSubnetIds'
       Environment:
         Variables:
           STAGE: !Ref StageName

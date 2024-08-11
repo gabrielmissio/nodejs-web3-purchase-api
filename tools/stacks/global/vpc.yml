@@ -44,6 +44,14 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0 # Adjust according to your security requirements
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0 # Adjust according to your security requirements
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 # Adjust according to your security requirements
 
   S3VPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -52,18 +60,18 @@ Resources:
       VpcEndpointType: Gateway
       VpcId: !Ref VPC
 
-  SecretsManagerVPCEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      PrivateDnsEnabled: true
-      SecurityGroupIds:
-        - !GetAtt SecurityGroup.GroupId
-      ServiceName: !Sub "com.amazonaws.${AWS::Region}.secretsmanager"
-      SubnetIds:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
-      VpcEndpointType: Interface
-      VpcId: !Ref VPC
+  # SecretsManagerVPCEndpoint:
+  #   Type: AWS::EC2::VPCEndpoint
+  #   Properties:
+  #     PrivateDnsEnabled: true
+  #     SecurityGroupIds:
+  #       - !GetAtt SecurityGroup.GroupId
+  #     ServiceName: !Sub "com.amazonaws.${AWS::Region}.secretsmanager"
+  #     SubnetIds:
+  #       - !Ref PrivateSubnet1
+  #       - !Ref PrivateSubnet2
+  #     VpcEndpointType: Interface
+  #     VpcId: !Ref VPC
 
 Outputs:
   VPCId:
@@ -90,8 +98,8 @@ Outputs:
     Export:
       Name: !Sub ${AppName}-S3VPCEndpointId
 
-  SecretsManagerVPCEndpointId:
-    Description: ID of the Secrets Manager Interface Endpoint
-    Value: !Ref SecretsManagerVPCEndpoint
-    Export:
-      Name: !Sub ${AppName}-SecretsManagerVPCEndpointId
+  # SecretsManagerVPCEndpointId:
+  #   Description: ID of the Secrets Manager Interface Endpoint
+  #   Value: !Ref SecretsManagerVPCEndpoint
+  #   Export:
+  #     Name: !Sub ${AppName}-SecretsManagerVPCEndpointId
