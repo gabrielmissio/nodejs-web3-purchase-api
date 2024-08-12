@@ -1,19 +1,16 @@
-const express = require('express')
-const corsMiddleware = require('../../middlewares/cors')
+const { JsonRpcProvider } = require('ethers')
 
-const app = express()
-app.disable('x-powered-by')
-app.use(express.json())
-app.use(corsMiddleware)
+const provider = new JsonRpcProvider(process.env.RCP_PROVIDER_PRIVATE_IP)
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+module.exports.handler = async (event) => {
+  try {
+    console.log('event', event)
+    const { chainId } = await provider.getNetwork()
+    console.log('chainId', chainId)
 
-app.all('*', (req, res) => {
-  res.send('You should not be here')
-})
-
-app.listen(3000, () => {
-  console.log('Customer app listening on port 3000!')
-})
+    return true
+  } catch (error) {
+    console.error('error', error)
+    return false
+  }
+}

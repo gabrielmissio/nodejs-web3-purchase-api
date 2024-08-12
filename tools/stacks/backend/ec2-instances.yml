@@ -60,6 +60,11 @@ Resources:
           ToPort: 22
           SourceSecurityGroupId: !ImportValue
             Fn::Sub: "${AppName}-SecurityGroupId"
+        - IpProtocol: tcp
+          FromPort: 8545
+          ToPort: 8545
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: "${AppName}-SecurityGroupId"
       Tags:
         - Key: Name
           Value: !Sub "${AppName}-EC2SecurityGroup"
@@ -168,9 +173,9 @@ Resources:
             # # Create directories
             # mkdir -p /home/ec2-user/Utils/hardhat-package
             # Download application zip build from S3
-            aws s3 cp s3://${S3BucketName}/ec2/Utils/hardhat-package.zip /home/ec2-user/Utils/hardhat-package.zip
+            aws s3 cp s3://${S3BucketName}/ec2/Utils/hardhat-package.tar.gz /home/ec2-user/Utils/hardhat-package.tar.gz
             # Unzip the application build
-            unzip /home/ec2-user/Utils/hardhat-package.zip -d /home/ec2-user/Utils/hardhat-package
+            tar -xzvf /home/ec2-user/Utils/hardhat-package.tar.gz -C /home/ec2-user/Utils/hardhat-package
             # Remove the application zip build
             # rm /home/ec2-user/Utils/hardhat-package.zip
 

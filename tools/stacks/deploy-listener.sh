@@ -27,6 +27,7 @@ echo "Syncing Listener to $S3_PATH"
 # install only production dependencies on the backend (./backend/src)
 cd backend/src
 npm install --omit=dev
+npm i -D @aws-sdk/client-secrets-manager
 cd ../../
 
 # zip the backend/src directory into .serverless/listener.zip (ommiting the .git)

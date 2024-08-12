@@ -1,3 +1,6 @@
+aws s3 cp s3://web3app-s3configbucket-configbucket-ehtpsiurulr9/ec2/Utils/hardhat-package.tar.gz /home/ec2-user/Utils/hardhat-package.tar.gz
+nohup npm run hardhat -- node --hostname 0.0.0.0 > hardhat.log 2>&1 &
+tar -xzvf hardhat-package.tar.gz
 # run on local
 # mkdir hardhat-package
 # cd hardhat-package

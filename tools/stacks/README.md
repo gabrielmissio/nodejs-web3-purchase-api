@@ -18,7 +18,7 @@ export APP_NAME=Web3App
 ### VPC
 
 ```bash
-aws cloudformation create-stack \
+aws cloudformation update-stack \
     --region ${REGION} \
     --stack-name ${APP_NAME}-VPC \
     --template-body file://tools/stacks/global/vpc.yml \
