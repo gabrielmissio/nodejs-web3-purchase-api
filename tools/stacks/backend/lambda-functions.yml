@@ -111,11 +111,11 @@ Resources:
               Resource: !ImportValue 
                 'Fn::Sub': '${AppName}-DocumentDBSecretArn'
       Events:
-        ApiEventUtils:
+        ApiEventUtilsRPCProxy:
           Type: HttpApi
           Properties:
-            Path: /utils/test-rcp-provider
-            Method: ANY
+            Path: /utils/rcp-proxy
+            Method: POST
             ApiId: !Ref HttpApi
 
   CustomerLambdaFunction:
