@@ -133,7 +133,13 @@ aws cloudformation create-stack \
 ## Get deployed stacks info
 
 ```bash
-sh ./tools/get-stacks-info.sh $APP_NAME $REGION $STAGE
+sh ./tools/stacks/get-stacks-info.sh $APP_NAME $REGION $STAGE
+```
+
+## Prepare files to EC2
+
+```bash
+sh ./tools/stacks/_setup-ec2.sh $APP_NAME $REGION #$STAGE
 ```
 
 ## Sync local ABIs with S3

@@ -157,13 +157,22 @@ Resources:
             npm -v
 
             # # Create directories
-            # mkdir -p /home/ec2-user/${AppName}/${StageName}/listener
-            # # Download application zip build from S3
-            # aws s3 cp s3://${S3BucketName}/ec2/${AppName}/${StageName}/listener/listener-build.zip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
-            # # Unzip the application build
-            # unzip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip -d /home/ec2-user/${AppName}/${StageName}/listener
-            # # Remove the application zip build
+            mkdir -p /home/ec2-user/${AppName}/${StageName}/listener
+            # Download application zip build from S3
+            aws s3 cp s3://${S3BucketName}/ec2/${AppName}/${StageName}/listener/listener-build.zip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
+            # Unzip the application build
+            unzip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip -d /home/ec2-user/${AppName}/${StageName}/listener
+            # Remove the application zip build
             # rm /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
+
+            # # Create directories
+            # mkdir -p /home/ec2-user/Utils/hardhat-package
+            # Download application zip build from S3
+            aws s3 cp s3://${S3BucketName}/ec2/Utils/hardhat-package.zip /home/ec2-user/Utils/hardhat-package.zip
+            # Unzip the application build
+            unzip /home/ec2-user/Utils/hardhat-package.zip -d /home/ec2-user/Utils/hardhat-package
+            # Remove the application zip build
+            # rm /home/ec2-user/Utils/hardhat-package.zip
 
 Outputs:
   EC2RPCNodeId:

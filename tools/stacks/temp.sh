@@ -1,9 +1,14 @@
 # run on local
-mkdir hardhat-package
-cd hardhat-package
-npm init -y
-# nvm use 16
-npm install --save-dev hardhat
+# mkdir hardhat-package
+# cd hardhat-package
+# npm init -y
+# # nvm use 16
+# npm install --save-dev hardhat
+# # add hardhat.config.js
+# cp ../blockchain/hardhat.config.js .
+
+# add npm scripts to package.json (hardhat run node)
+# command line to create script on package.json
 
 # zip the hardhat-package directory into .serverless/hardhat-package.zip (ommiting the .git)
 zip -r tools/stacks/backend/.serverless/hardhat-package.zip hardhat-package
