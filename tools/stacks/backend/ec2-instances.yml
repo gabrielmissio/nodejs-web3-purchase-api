@@ -171,7 +171,7 @@ Resources:
             # rm /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
 
             # # Create directories
-            # mkdir -p /home/ec2-user/Utils/hardhat-package
+            mkdir -p /home/ec2-user/Utils/hardhat-package
             # Download application zip build from S3
             aws s3 cp s3://${S3BucketName}/ec2/Utils/hardhat-package.tar.gz /home/ec2-user/Utils/hardhat-package.tar.gz
             # Unzip the application build

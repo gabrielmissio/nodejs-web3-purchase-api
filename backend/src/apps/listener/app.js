@@ -4,10 +4,10 @@
 const {
   getProvider,
   getContractInstance,
-} = require('./utils/contract-helper')
-const purchaseEvents = require('./utils/purchase-events')
-const blockcountRepository = require('./infra/repositories/blockcount-repository')
-const purchaseRepository = require('./infra/repositories/purchase-repository')
+} = require('../../utils/contract-helper')
+const purchaseEvents = require('../../utils/purchase-events')
+const blockcountRepository = require('../../infra/repositories/blockcount-repository')
+const purchaseRepository = require('../../infra/repositories/purchase-repository')
 
 async function listen(callback) {
   const provider = getProvider()

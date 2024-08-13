@@ -7,10 +7,4 @@ module.exports = {
       },
     },
   },
-  networks: {
-    localhost: {
-      url: process.env.RCP_URL,
-      accounts: [process.env.ACCOUNT_KEY],
-    },
-  },
 }

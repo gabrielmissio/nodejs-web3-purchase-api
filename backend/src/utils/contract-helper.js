@@ -40,7 +40,7 @@ function getProvider () {
 
 function getNetworkConfig () {
   const accounts = [process.env.ACCOUNT_KEY]
-  const url = process.env.RCP_URL
+  const url = `http://${process.env.RCP_PROVIDER_PRIVATE_IP}:8545`
 
   return {
     rcpUrl: url,

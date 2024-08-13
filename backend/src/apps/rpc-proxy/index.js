@@ -1,6 +1,8 @@
 const { JsonRpcProvider } = require('ethers')
 
-const provider = new JsonRpcProvider(process.env.RCP_PROVIDER_PRIVATE_IP)
+const provider = new JsonRpcProvider(
+  `http://${process.env.RCP_PROVIDER_PRIVATE_IP}:8545`,
+)
 
 module.exports.handler = async (event) => {
   try {

@@ -1,0 +1,7 @@
+- ajustar SGs para aderir o minimo de permissoes necessarias
+- ver se o dominio interno da EC2 funciona no lugar no IP
+- setup scripts para EC2 se conectar com o documentDB e ETC
+- Rodar end2end da aplicação
+- subir certificado para o EC2 (precisa para conectar no mongo)
+- subir ABIs e scripts para "setar a aplicação"
+- rodar o maximo possivo no UserData Script

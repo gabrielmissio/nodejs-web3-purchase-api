@@ -1,7 +1,7 @@
-const { connectDB } = require('../api/src/infra/helper/db-helper')
+const { connectDB } = require('../../backend/src/infra/helper/db-helper')
 
-const purchaseController = require('../api/src/presentation/controllers/purchase-controller')
-const eventListener = require('../api/src/listener')
+const purchaseController = require('.../../backend/src/presentation/controllers/purchase-controller')
+const eventListener = require('../../backend/src/apps/listener/app')
 
 const products = [
   {
