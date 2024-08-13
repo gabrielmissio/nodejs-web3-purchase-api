@@ -47,6 +47,9 @@ Resources:
             'Fn::Sub': '${AppName}-EC2RPCNodePrivateIP'
           RCP_PROVIDER_PRIVATE_DNS: !ImportValue
             'Fn::Sub': '${AppName}-EC2RPCNodePrivateDNS'
+          ABI_BUCKET_NAME: !ImportValue
+            'Fn::Sub': '${AppName}-S3ConfigBucketName'
+          ABI_BUCKET_PATH: !Sub 'ec2/${AppName}/${StageName}/listener/abis'
       Policies:
         - AWSLambdaBasicExecutionRole
         - Version: '2012-10-17'
@@ -67,6 +70,59 @@ Resources:
           Type: HttpApi
           Properties:
             Path: /admin/{proxy+}
+            Method: ANY
+            ApiId: !Ref HttpApi
+
+  CustomerLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apps/customer/index.handler
+      Runtime: nodejs18.x
+      CodeUri: ../../../backend/src
+      MemorySize: 128
+      Timeout: 20
+      VpcConfig:
+        SecurityGroupIds: 
+          - !ImportValue 
+            'Fn::Sub': '${AppName}-SecurityGroupId'
+        SubnetIds: !Split
+          - ","
+          - !ImportValue
+            'Fn::Sub': '${AppName}-PrivateSubnetIds'
+      Environment:
+        Variables:
+          STAGE: !Ref StageName
+          DOCUMENTDB_ENDPOINT: !ImportValue 
+            'Fn::Sub': '${AppName}-DocumentDBEndpoint'
+          DOCUMENTDB_SECRET_ARN: !ImportValue 
+            'Fn::Sub': '${AppName}-DocumentDBSecretArn'
+          RCP_PROVIDER_PRIVATE_IP: !ImportValue 
+            'Fn::Sub': '${AppName}-EC2RPCNodePrivateIP'
+          RCP_PROVIDER_PRIVATE_DNS: !ImportValue
+            'Fn::Sub': '${AppName}-EC2RPCNodePrivateDNS'
+          ABI_BUCKET_NAME: !ImportValue
+            'Fn::Sub': '${AppName}-S3ConfigBucketName'
+          ABI_BUCKET_PATH: !Sub 'ec2/${AppName}/${StageName}/listener/abis'
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 
+                - "secretsmanager:GetSecretValue"
+              Resource: !ImportValue 
+                'Fn::Sub': '${AppName}-DocumentDBSecretArn'
+      Events:
+        ApiEventAdmin:
+          Type: HttpApi
+          Properties:
+            Path: /customer
+            Method: ANY
+            ApiId: !Ref HttpApi
+        ApiEventAdminProxy:
+          Type: HttpApi
+          Properties:
+            Path: /customer/{proxy+}
             Method: ANY
             ApiId: !Ref HttpApi
 
@@ -114,58 +170,8 @@ Resources:
         ApiEventUtilsRPCProxy:
           Type: HttpApi
           Properties:
-            Path: /utils/rcp-proxy
+            Path: /utils/rpc-proxy
             Method: POST
-            ApiId: !Ref HttpApi
-
-  CustomerLambdaFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: apps/customer/index.handler
-      Runtime: nodejs18.x
-      CodeUri: ../../../backend/src
-      MemorySize: 128
-      Timeout: 20
-      VpcConfig:
-        SecurityGroupIds: 
-          - !ImportValue 
-            'Fn::Sub': '${AppName}-SecurityGroupId'
-        SubnetIds: !Split
-          - ","
-          - !ImportValue
-            'Fn::Sub': '${AppName}-PrivateSubnetIds'
-      Environment:
-        Variables:
-          STAGE: !Ref StageName
-          DOCUMENTDB_ENDPOINT: !ImportValue 
-            'Fn::Sub': '${AppName}-DocumentDBEndpoint'
-          DOCUMENTDB_SECRET_ARN: !ImportValue 
-            'Fn::Sub': '${AppName}-DocumentDBSecretArn'
-          RCP_PROVIDER_PRIVATE_IP: !ImportValue 
-            'Fn::Sub': '${AppName}-EC2RPCNodePrivateIP'
-          RCP_PROVIDER_PRIVATE_DNS: !ImportValue
-            'Fn::Sub': '${AppName}-EC2RPCNodePrivateDNS'
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action: 
-                - "secretsmanager:GetSecretValue"
-              Resource: !ImportValue 
-                'Fn::Sub': '${AppName}-DocumentDBSecretArn'
-      Events:
-        ApiEventAdmin:
-          Type: HttpApi
-          Properties:
-            Path: /customer
-            Method: ANY
-            ApiId: !Ref HttpApi
-        ApiEventAdminProxy:
-          Type: HttpApi
-          Properties:
-            Path: /customer/{proxy+}
-            Method: ANY
             ApiId: !Ref HttpApi
 
 Outputs:

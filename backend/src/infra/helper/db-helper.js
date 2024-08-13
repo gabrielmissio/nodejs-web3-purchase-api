@@ -17,7 +17,7 @@ const connectDB = async () => {
   const encodedPassword = encodeURIComponent(password)
   const clusterEndpoint = process.env.DOCUMENTDB_ENDPOINT
   const dbName = 'mydatabase' // Replace with your actual database name
-  const mongoUri = `mongodb://${encodedUsername}:${encodedPassword}@${clusterEndpoint}:${port}/${dbName}?ssl=truetrue&tlsCAFile=global-bundle.pem&retryWrites=false`
+  const mongoUri = `mongodb://${encodedUsername}:${encodedPassword}@${clusterEndpoint}:${port}/${dbName}?ssl=true${process.env.USE_DOCDB_CERTIFICATE === 'true' ? '&tlsCAFile=global-bundle.pem' : ''}&retryWrites=false`
 
   console.log('=> using new database connection')
   await mongoose.connect(mongoUri)

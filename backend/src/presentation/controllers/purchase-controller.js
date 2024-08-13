@@ -9,7 +9,7 @@ async function publishPurchase (req, res) {
   try {
     const { name, value } = req.body  // value is in wei
 
-    const contractFactory = getContractFactory({ contractName: 'Purchase' })
+    const contractFactory = await getContractFactory({ contractName: 'Purchase' })
     const deployContractTx = await contractFactory.deploy(
       process.env.PURCHASE_EVENT_PROXY_ADDRESS, { value },
     )
@@ -34,7 +34,7 @@ async function abortPurchase (req, res) {
   try {
     const { contractAddress } = req.body
 
-    const contractInstance = getContractInstance({
+    const contractInstance = await getContractInstance({
       contractName: 'Purchase', contractAddress,
     })
 
@@ -59,7 +59,7 @@ async function settleFunds (req, res) {
   try {
     const { contractAddress } = req.body
 
-    const contractInstance = getContractInstance({
+    const contractInstance = await getContractInstance({
       contractName: 'Purchase', contractAddress,
     })
 

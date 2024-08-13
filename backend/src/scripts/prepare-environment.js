@@ -1,14 +1,14 @@
 const {
   getContractFactory,
-} = require('../../backend/src/utils/contract-helper')
-const { connectDB } = require('../../backend/src/infra/helper/db-helper')
+} = require('../utils/contract-helper')
+const { connectDB } = require('../infra/helper/db-helper')
 
-const blockcountRepository = require('../../backend/src/infra/repositories/blockcount-repository')
-const userRepository = require('../../backend/src/infra/repositories/user-repository')
-const authController = require('../../backend/src/presentation/controllers/auth-controller')
+const blockcountRepository = require('../infra/repositories/blockcount-repository')
+const userRepository = require('../infra/repositories/user-repository')
+const authController = require('../presentation/controllers/auth-controller')
 
 async function deployPurchaseEventProxy() {
-  const contractFactory = getContractFactory({ contractName: 'PurchaseEventProxy' })
+  const contractFactory = await getContractFactory({ contractName: 'PurchaseEventProxy' })
 
   const deployContractTx = await contractFactory.deploy()
   await deployContractTx.waitForDeployment()

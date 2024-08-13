@@ -27,7 +27,7 @@ echo "Syncing Listener to $S3_PATH"
 # install only production dependencies on the backend (./backend/src)
 cd backend/src
 npm install --omit=dev
-npm i -D @aws-sdk/client-secrets-manager
+npm i -D @aws-sdk/client-secrets-manager @aws-sdk/client-s3
 cd ../../
 
 
@@ -38,10 +38,12 @@ mv ./global-bundle.pem backend/src/infra/helper
 # zip the backend/src directory into .serverless/listener.zip (ommiting the .git)
 zip -r tools/stacks/backend/.serverless/listener-build.zip backend/src -x "*/.git/*"
 # Remove the downloaded file
-rm /global-bundle.pem backend/src/infra/helper/global-bundle.pem
+rm backend/src/infra/helper/global-bundle.pem
 
 # Sync the local directory to the S3 bucket
 aws s3 cp tools/stacks/backend/.serverless/listener-build.zip $S3_PATH/listener-build.zip
+aws s3 cp blockchain/abis/PurchaseEventProxy.json $S3_PATH/abis/PurchaseEventProxy.json
+aws s3 cp blockchain/abis/Purchase.json $S3_PATH/abis/Purchase.json
 
 # Check if the sync command was successful
 if [ $? -eq 0 ]; then

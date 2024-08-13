@@ -17,7 +17,7 @@ async function listen(callback) {
     { lastFetchedBlock: blockcount.lastFetchedBlock, currentBlock },
   )
 
-  const contractInstance = getContractInstance({
+  const contractInstance = await getContractInstance({
     contractName: 'PurchaseEventProxy',
     contractAddress: process.env.PURCHASE_EVENT_PROXY_ADDRESS,
   })
