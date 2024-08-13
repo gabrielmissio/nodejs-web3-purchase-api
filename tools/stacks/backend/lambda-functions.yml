@@ -73,7 +73,7 @@ Resources:
   UtilsLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: apps/hello/index.handler
+      Handler: apps/rpc-proxy/index.handler
       Runtime: nodejs18.x
       CodeUri: ../../../backend/src
       MemorySize: 128
