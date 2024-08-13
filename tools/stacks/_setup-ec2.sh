@@ -39,3 +39,7 @@ else
     echo "Sync failed. Please check the AWS CLI output for details."
     exit 1
 fi
+
+tar -czvf tools/scripts.tar.gz ./tools/scripts/
+aws s3 cp tools/scripts.tar.gz $S3_PATH/scripts.tar.gz
+rm tools/scripts.tar.gz
