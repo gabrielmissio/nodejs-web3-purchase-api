@@ -179,6 +179,14 @@ Resources:
             # Remove the application zip build
             # rm /home/ec2-user/Utils/hardhat-package.zip
 
+            # # Create directories
+            mkdir -p /home/ec2-user/Utils/scripts
+            aws s3 cp s3://${S3BucketName}/ec2/Utils/scripts.tar.gz /home/ec2-user/Utils/scripts.tar.gz
+            # Unzip the application build
+            tar -xzvf /home/ec2-user/Utils/scripts.tar.gz -C /home/ec2-user/Utils/scripts
+            # Remove the application zip build
+            # rm /home/ec2-user/Utils/hardhat-package.zip
+
 Outputs:
   EC2RPCNodeId:
     Description: The Instance ID of the EC2 instance
