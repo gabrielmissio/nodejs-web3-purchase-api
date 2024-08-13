@@ -1,9 +1,9 @@
 const ethers = require('ethers')
-const { loadABI } = require('./abi-loader')
+const abiLoader = require('./abi-loader')
 
 async function getContractFactory ({ contractName }) {
   const walletSigner = getWalletSigner()
-  const { abi, bytecode } = await loadABI(contractName)
+  const { abi, bytecode } = await abiLoader.loadABI(contractName)
 
   const contractFactory = new ethers.ContractFactory(abi, bytecode, walletSigner)
 
@@ -12,7 +12,7 @@ async function getContractFactory ({ contractName }) {
 
 async function getContractInstance ({ contractName, contractAddress }) {
   const walletSigner = getWalletSigner()
-  const { abi } = await loadABI(contractName)
+  const { abi } = await abiLoader.loadABI(contractName)
 
   const contract = new ethers.Contract(contractAddress, abi, walletSigner)
   const contractInstance = contract.connect(walletSigner)
