@@ -36,7 +36,7 @@ TEMP_APP_JS="./frontend/public/app.temp.js"
 cp ./frontend/public/app.js $TEMP_APP_JS
 
 # Replace 'http://localhost:3000' with the actual API URL in the temporary file
-sed -i "s|http://localhost:3000|$API_URL|g" $TEMP_APP_JS
+sed -i "s|http://localhost:3000|$API_URL/|g" $TEMP_APP_JS
 
 # Sync the temporary file and other website files to the S3 bucket
 S3_PATH="s3://$S3_BUCKET"
