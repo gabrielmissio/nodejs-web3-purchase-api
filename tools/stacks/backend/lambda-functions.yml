@@ -64,7 +64,10 @@ Resources:
             - Effect: Allow
               Action: 
                 - "s3:GetObject"
-              Resource: !Sub 'arn:aws:s3:::${AppName}-S3ConfigBucketName/*'
+              Resource: !Sub 
+                - '${BucketArn}/*'
+                - BucketArn: !ImportValue 
+                    'Fn::Sub': '${AppName}-S3ConfigBucketArn'
       Events:
         ApiEventAdmin:
           Type: HttpApi
@@ -123,7 +126,10 @@ Resources:
             - Effect: Allow
               Action: 
                 - "s3:GetObject"
-              Resource: !Sub 'arn:aws:s3:::${AppName}-S3ConfigBucketName/*'
+              Resource: !Sub 
+                - '${BucketArn}/*'
+                - BucketArn: !ImportValue 
+                    'Fn::Sub': '${AppName}-S3ConfigBucketArn'
       Events:
         ApiEventAdmin:
           Type: HttpApi
@@ -190,15 +196,23 @@ Outputs:
   ApiGatewayAdminInvokeURL:
     Description: "Invoke URL for the API Gateway"
     Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/admin'
+    Export:
+      Name: !Sub '${AppName}-ApiGatewayAdminInvokeURL-${StageName}'
 
   AdminLambdaFunctionArn:
     Description: "ARN of the deployed Lambda function"
     Value: !GetAtt AdminLambdaFunction.Arn
+    Export:
+      Name: !Sub '${AppName}-AdminLambdaFunctionArn-${StageName}'
 
   ApiGatewayCustomerInvokeURL:
     Description: "Invoke URL for the API Gateway"
     Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/customer'
+    Export:
+      Name: !Sub '${AppName}-ApiGatewayCustomerInvokeURL-${StageName}'
 
   CustomerLambdaFunctionArn:
     Description: "ARN of the deployed Lambda function"
     Value: !GetAtt CustomerLambdaFunction.Arn
+    Export:
+      Name: !Sub '${AppName}-CustomerLambdaFunctionArn-${StageName}'

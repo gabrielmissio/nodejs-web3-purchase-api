@@ -122,7 +122,8 @@ aws cloudformation create-stack \
     --region ${REGION} \
     --stack-name ${APP_NAME}-StaticWebsite-${STAGE} \
     --template-body file://tools/stacks/frontend/static-website.yml \
-    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
+    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME} \
+        ParameterKey=StageName,ParameterValue=${STAGE}
 ```
 
 
@@ -142,10 +143,10 @@ sh ./tools/stacks/get-stacks-info.sh $APP_NAME $REGION $STAGE
 sh ./tools/stacks/_setup-ec2.sh $APP_NAME $REGION #$STAGE
 ```
 
-## Sync local ABIs with S3
+## Deploy frontend files
 
 ```bash
-sh ./tools/abi-sync.sh $APP_NAME $REGION $STAGE
+sh ./tools/stacks/deploy-frontend2.sh $APP_NAME $REGION $STAGE
 ```
 
 ## Sync listener files with S3

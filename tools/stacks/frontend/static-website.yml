@@ -70,3 +70,22 @@ Resources:
         PriceClass: PriceClass_All
         ViewerCertificate:
           CloudFrontDefaultCertificate: true
+
+Outputs:
+  CloudFrontDistributionId:
+    Description: "CloudFront Distribution ID"
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub '${AppName}-CloudFrontDistributionId-${StageName}'
+
+  CloudFrontDistributionDomainName:
+    Description: "CloudFront Distribution Domain Name"
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub '${AppName}-CloudFrontDistributionDomainName-${StageName}'
+
+  StaticWebsiteBucketName:
+    Description: "Name of the S3 bucket"
+    Value: !Ref StaticWebsiteBucket
+    Export:
+      Name: !Sub '${AppName}-StaticWebsiteBucketName-${StageName}'
