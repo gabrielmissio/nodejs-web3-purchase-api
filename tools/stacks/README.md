@@ -1,7 +1,7 @@
  - Docker
  - Node.js
  - [AWS CLI](https://docs.aws.amazon.com/pt_br/cli/latest/userguide/getting-started-install.html)
- - [AWS SAN](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
+ - [AWS SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 
 # Stacks
 

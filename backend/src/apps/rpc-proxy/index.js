@@ -18,7 +18,16 @@ module.exports.handler = async (event) => {
     const result = await provider.send(body.method, body.params)
     console.log('result', result)
 
-    return result
+    // {"jsonrpc":"2.0","id":"1723601512179","result":"0x7a69"}
+    // TODO: format result to return like a JSON-RPC response
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: body.id,
+        result,
+      }),
+    }
   } catch (error) {
     console.error('error', error)
     return false

@@ -1,6 +1,6 @@
 aws s3 cp s3://web3app-s3configbucket-configbucket-ehtpsiurulr9/ec2/Utils/hardhat-package.tar.gz /home/ec2-user/Utils/hardhat-package.tar.gz
 nohup npm run hardhat -- node --hostname 0.0.0.0 > hardhat.log 2>&1 &
-nohup node npm run start > listener.log 2>&1 &
+nohup npm run start > listener.log 2>&1 &
 touch new_listener.log
 sudo chown ec2-user:ec2-user listener.log
 
