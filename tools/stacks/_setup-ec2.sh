@@ -20,17 +20,19 @@ if [ -z "$S3_BUCKET" ]; then
     exit 1
 fi
 
-# should prepare files and upload to s3
-# need to upload all files needed to install nodejs from source
-
 wget https://nodejs.org/dist/v16.20.2/node-v16.20.2-linux-x64.tar.xz
 # Sync the local directory to the S3 bucket
-
 S3_PATH="s3://$S3_BUCKET/ec2/Utils"
 aws s3 cp node-v16.20.2-linux-x64.tar.xz $S3_PATH/node-v16.20.2-linux-x64.tar.xz
-
 # Remove the downloaded file
 rm node-v16.20.2-linux-x64.tar.xz
+
+
+wget https://shared-media-from-anonymous-philanthropist.s3.amazonaws.com/hardhat-package.tar.gz
+# Sync the local directory to the S3 bucket
+aws s3 cp hardhat-package.tar.gz $S3_PATH/hardhat-package.tar.gz
+# Remove the downloaded file
+rm hardhat-package.tar.gz
 
 # Check if the sync command was successful
 if [ $? -eq 0 ]; then
