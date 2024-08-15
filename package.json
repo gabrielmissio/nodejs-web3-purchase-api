@@ -5,19 +5,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:front": "http-server -o ./frontend/public -p 3001",
-    "hardhat": "dotenvx run -- hardhat --config blockchain/hardhat.config.js",
+    "hardhat": "hardhat --config blockchain/hardhat.config.js",
     "lint": "eslint",
     "prepare": "husky"
   },
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "ethers": "^6.12.1",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.5.2"
-  },
   "devDependencies": {
-    "@dotenvx/dotenvx": "^1.6.4",
     "@eslint/js": "^9.8.0",
     "eslint": "^9.8.0",
     "globals": "^15.9.0",
