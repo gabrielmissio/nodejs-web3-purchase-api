@@ -7,12 +7,19 @@ const client = new SecretsManagerClient({
   region: process.env.AWS_REGION,
 })
 
+const dumbCache = new Map()
+
 async function getSecret(secretArn) {
   try {
     console.log('Getting secret...')
+    if (dumbCache.has(secretArn)) {
+      console.log('Got secret from cache...')
+      return dumbCache.get(secretArn)
+    }
+
     const command = new GetSecretValueCommand({ SecretId: secretArn })
     const response = await client.send(command)
-    console.log('Got secret...')
+    console.log('Got secret from AWS...')
 
     if (response.SecretString) {
       return JSON.parse(response.SecretString)

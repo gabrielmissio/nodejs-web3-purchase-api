@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
+const { getSecret } = require('../infra/helper/secret-helper')
 
-module.exports = (req, res, next) => {
+module.exports = async (req, res, next) => {
   const token = req.header('Authorization')
 
   if (!token) return res.status(400).json({
@@ -8,9 +9,11 @@ module.exports = (req, res, next) => {
   })
 
   try {
+    const { jwtSecret }  = await getSecret(process.env.JWT_SECRET_ARN)
+
     jwt.verify(
       token.replace('Bearer ', ''),
-      process.env.AUTH_JWT_SECRET,
+      jwtSecret,
     )
 
     next()

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const { getSecret } = require('../../infra/helper/secret-helper')
 const userRepository = require('../../infra/repositories/user-repository')
 const { verifyPassword, hashPassword } = require('../../utils/auth-helper')
 
@@ -21,9 +22,10 @@ async function login (req, res) {
       return res.status(401).json({ error: 'Invalid credentials' })
     }
 
+    const { jwtSecret }  = await getSecret(process.env.JWT_SECRET_ARN)
     const token = jwt.sign(
       { id: user._id },
-      process.env.AUTH_JWT_SECRET,
+      jwtSecret,
       { expiresIn: '1h' },
     )
 
@@ -50,9 +52,10 @@ async function signup (req, res) {
       password: hash,
     })
 
+    const { jwtSecret }  = await getSecret(process.env.JWT_SECRET_ARN)
     const token = jwt.sign(
       { id: user._id },
-      process.env.AUTH_JWT_SECRET,
+      jwtSecret,
       { expiresIn: '1h' },
     )
 
