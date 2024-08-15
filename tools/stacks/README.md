@@ -37,13 +37,36 @@ aws cloudformation create-stack \
     --parameters ParameterKey=AppName,ParameterValue=${APP_NAME}
 ```
 
-Get stack outputs (bucket name and bucket arn):
+### Upload Data to Config Bucket
 
 ```bash
-aws cloudformation describe-stacks \
-    --region ${REGION} \
-    --stack-name ${APP_NAME}-S3ConfigBucket \
-    --query 'Stacks[0].Outputs'
+sh ./tools/stacks/_setup-ec2.sh $APP_NAME $REGION
+```
+
+and
+
+```bash
+sh ./tools/stacks/deploy-listener.sh $APP_NAME $REGION $STAGE
+```
+
+### Setup Parameters and Secrets
+
+Create Admin Account Key Secret
+
+```bash
+aws secretsmanager create-secret \
+    --name ${APP_NAME}/AdminKey/${STAGE} \
+    --secret-string '{"accountKey":"<PRIVATE_KEY>"}'
+    --region ${REGION}
+```
+
+Create JWT Secret
+
+```bash
+aws secretsmanager create-secret \
+    --name ${APP_NAME}/JWTSecret/${STAGE} \
+    --secret-string '{"jwtSecret":"<MY_SECRET>"}' \
+    --region ${REGION}
 ```
 
 ## Blockchain
@@ -68,6 +91,51 @@ aws cloudformation create-stack \
     --parameters ParameterKey=AppName,ParameterValue=${APP_NAME} \
         ParameterKey=S3BucketName,ParameterValue=${CONFIG_BUCKET_NAME} \
     --capabilities CAPABILITY_IAM
+```
+
+### Start EVM RPC Node
+
+```bash
+cd
+cd /home/ec2-user/Utils/hardhat-package/hardhat-package
+nohup npm run hardhat -- node --hostname 0.0.0.0 > hardhat.log 2>&1 &
+```
+
+### Lorem (apenas no dia 0)
+
+set envs
+
+```bash
+export AWS_REGION="us-east-1"
+export USE_DOCDB_CERTIFICATE="true"
+export DOCUMENTDB_SECRET_ARN="arn:aws:secretsmanager:us-east-1:034362031360:secret:Web3App/DocumentDBSecret-LGWVYq"
+export DOCUMENTDB_ENDPOINT="web3app-documentdbcluster.cluster-cryquwmegguy.us-east-1.docdb.amazonaws.com"
+export RCP_PROVIDER_PRIVATE_IP="localhost"
+
+export FIRST_ADM_USERNAME="admin"
+export FIRST_ADM_PASSWORD="Abcd1234#"
+
+export ACCOUNT_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+export AUTH_JWT_SECRET="jodsfiagjrdflgixshmerldfvunybwgh"
+export PURCHASE_EVENT_PROXY_ADDRESS="0x5fbdb2315678afecb367f032d93f642f64180aa3"
+```
+
+```bash
+cd
+cd /home/ec2-user/Web3App/dev/listener/backend/src
+node scripts/prepare-environment.js
+```
+
+### Start Listener
+
+```bash
+cd
+cd /home/ec2-user/Web3App/dev/listener/backend/src
+
+sudo touch listener.log
+sudo chown ec2-user:ec2-user listener.log
+sudo chmod 664 listener.log
+nohup node apps/listener/index.js > listener.log 2>&1 &
 ```
 
 ## Backend
@@ -97,7 +165,26 @@ export DEPLOYMENT_BUCKET_NAME=$(
 )
 ```
 
+Carregar id dos secredos
+
 ```bash
+export ADMIN_KEY_SECRET=$(
+    aws secretsmanager get-secret-value \
+    --secret-id ${APP_NAME}/AdminKey/${STAGE} \
+    --query ARN \
+    --output text
+)
+export JWT_SECRET=$(
+    aws secretsmanager get-secret-value \
+    --secret-id ${APP_NAME}/JWTSecret/${STAGE} \
+    --query ARN \
+    --output text
+)
+```
+
+```bash
+cd ./tools/stacks/backend
+mkdir -p .serverless
 sam package --template-file lambda-functions.yml \
     --output-template-file .serverless/lambda-functions.yml \
     --s3-bucket ${DEPLOYMENT_BUCKET_NAME} \
@@ -105,12 +192,16 @@ sam package --template-file lambda-functions.yml \
 ```
 
 ```bash
+cd ../../../backend/src
+npm i --omit=dev
+cd ../../tools/stacks/backend
 sam deploy --template-file lambda-functions.yml \
     --stack-name ${APP_NAME}-Lambdas-${STAGE} \
     --s3-bucket ${DEPLOYMENT_BUCKET_NAME} \
     --s3-prefix sam/${APP_NAME}/${STAGE}/lambda-functions \
     --capabilities CAPABILITY_IAM \
-    --parameter-overrides StageName=${STAGE} AppName=${APP_NAME}
+    --parameter-overrides AppName=${APP_NAME} StageName=${STAGE} \
+        JWTSecret=${JWT_SECRET} AdminKeySecret=${ADMIN_KEY_SECRET} PurchaseEventProxy="0x5FbDB2315678afecb367f032d93F642f64180aa3"
 ```
 
 ## Frontend
@@ -126,31 +217,8 @@ aws cloudformation create-stack \
         ParameterKey=StageName,ParameterValue=${STAGE}
 ```
 
-
-### Sync frontend build to S3 bucket
-
-## Utils
-
-## Get deployed stacks info
+### Deploy frontend files
 
 ```bash
-sh ./tools/stacks/get-stacks-info.sh $APP_NAME $REGION $STAGE
-```
-
-## Prepare files to EC2
-
-```bash
-sh ./tools/stacks/_setup-ec2.sh $APP_NAME $REGION #$STAGE
-```
-
-## Deploy frontend files
-
-```bash
-sh ./tools/stacks/deploy-frontend2.sh $APP_NAME $REGION $STAGE
-```
-
-## Sync listener files with S3
-
-```bash
-sh ./tools/stacks/deploy-listener.sh $APP_NAME $REGION $STAGE
+sh ./tools/stacks/deploy-frontend.sh $APP_NAME $REGION $STAGE
 ```

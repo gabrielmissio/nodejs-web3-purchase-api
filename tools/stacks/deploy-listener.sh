@@ -33,12 +33,12 @@ cd ../../
 
 # Download DocumentDB certificate
 wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
-mv ./global-bundle.pem backend/src/infra/helper
+mv ./global-bundle.pem backend/src
 
 # zip the backend/src directory into .serverless/listener.zip (ommiting the .git)
 zip -r tools/stacks/backend/.serverless/listener-build.zip backend/src -x "*/.git/*"
 # Remove the downloaded file
-rm backend/src/infra/helper/global-bundle.pem
+rm backend/src/global-bundle.pem
 
 # Sync the local directory to the S3 bucket
 aws s3 cp tools/stacks/backend/.serverless/listener-build.zip $S3_PATH/listener-build.zip
