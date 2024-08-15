@@ -105,18 +105,10 @@ nohup npm run hardhat -- node --hostname 0.0.0.0 > hardhat.log 2>&1 &
 :warning: **É necessário setar as variáveis de ambiente antes de rodar o script**
 
 ```bash
-export AWS_REGION=$REGION
-export USE_DOCDB_CERTIFICATE="true"
-export DOCUMENTDB_SECRET_ARN=""
-export DOCUMENTDB_ENDPOINT=""
-export RCP_PROVIDER_PRIVATE_IP="localhost"
-export ADMIN_KEY_SECRET_ARN=""
-
 export FIRST_ADM_USERNAME="admin"
 export FIRST_ADM_PASSWORD="Abcd1234#"
-
-# export ACCOUNT_KEY=""
-# export AUTH_JWT_SECRET=""
+export JWT_SECRET_ARN=""
+export ADMIN_KEY_SECRET_ARN=""
 export PURCHASE_EVENT_PROXY_ADDRESS="0x5fbdb2315678afecb367f032d93f642f64180aa3"
 ```
 
@@ -129,6 +121,11 @@ node scripts/prepare-environment.js
 ### Start Listener
 
 :warning: **É necessário setar as variáveis de ambiente antes de rodar o script**
+
+```bash
+export ADMIN_KEY_SECRET_ARN=""
+export PURCHASE_EVENT_PROXY_ADDRESS="0x5fbdb2315678afecb367f032d93f642f64180aa3"
+```
 
 ```bash
 cd
