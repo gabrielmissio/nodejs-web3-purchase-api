@@ -22,7 +22,9 @@ async function getSecret(secretArn) {
     console.log('Got secret from AWS...')
 
     if (response.SecretString) {
-      return JSON.parse(response.SecretString)
+      const result = JSON.parse(response.SecretString)
+      dumbCache.set(secretArn, result)
+      return result
     } else {
       throw new Error('SecretString not found')
     }

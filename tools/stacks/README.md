@@ -103,20 +103,21 @@ nohup npm run hardhat -- node --hostname 0.0.0.0 > hardhat.log 2>&1 &
 
 ### Lorem (apenas no dia 0)
 
-set envs
+:warning: **É necessário setar as variáveis de ambiente antes de rodar o script**
 
 ```bash
-export AWS_REGION="us-east-1"
+export AWS_REGION=$REGION
 export USE_DOCDB_CERTIFICATE="true"
-export DOCUMENTDB_SECRET_ARN="arn:aws:secretsmanager:us-east-1:034362031360:secret:Web3App/DocumentDBSecret-LGWVYq"
-export DOCUMENTDB_ENDPOINT="web3app-documentdbcluster.cluster-cryquwmegguy.us-east-1.docdb.amazonaws.com"
+export DOCUMENTDB_SECRET_ARN=""
+export DOCUMENTDB_ENDPOINT=""
 export RCP_PROVIDER_PRIVATE_IP="localhost"
+export ADMIN_KEY_SECRET_ARN=""
 
 export FIRST_ADM_USERNAME="admin"
 export FIRST_ADM_PASSWORD="Abcd1234#"
 
-export ACCOUNT_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-export AUTH_JWT_SECRET="jodsfiagjrdflgixshmerldfvunybwgh"
+# export ACCOUNT_KEY=""
+# export AUTH_JWT_SECRET=""
 export PURCHASE_EVENT_PROXY_ADDRESS="0x5fbdb2315678afecb367f032d93f642f64180aa3"
 ```
 
@@ -127,6 +128,8 @@ node scripts/prepare-environment.js
 ```
 
 ### Start Listener
+
+:warning: **É necessário setar as variáveis de ambiente antes de rodar o script**
 
 ```bash
 cd
