@@ -87,7 +87,7 @@ export CONFIG_BUCKET_NAME=$(
 aws cloudformation create-stack \
     --region ${REGION} \
     --stack-name ${APP_NAME}-EC2Instances \
-    --template-body file://tools/stacks/backend/ec2-instances.yml \
+    --template-body file://tools/stacks/blockchain/ec2-instances.yml \
     --parameters ParameterKey=AppName,ParameterValue=${APP_NAME} \
         ParameterKey=S3BucketName,ParameterValue=${CONFIG_BUCKET_NAME} \
     --capabilities CAPABILITY_IAM

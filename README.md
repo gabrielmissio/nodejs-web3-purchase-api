@@ -41,20 +41,6 @@ npm run hardhat -- node
 Agora vamos executar alguns scripts para aplicar as configurações inicias da aplicação. O que consiste em criar o primeiro usuario admin, e implantar o contrato de proxy na rede do hardhat.
 
 ```bash
-export USE_DOCDB_CERTIFICATE="true"
-export AWS_REGION="us-east-1"
-export FIRST_ADM_USERNAME="admin"
-export FIRST_ADM_PASSWORD="Abcd1234#"
-export DOCUMENTDB_SECRET_ARN="arn:aws:secretsmanager:us-east-1:034362031360:secret:Web3App/DocumentDBSecret-bVDzxd"
-export DOCUMENTDB_ENDPOINT="web3app-documentdbcluster.cluster-cryquwmegguy.us-east-1.docdb.amazonaws.com"
-export AWS_REGION="us-east-1"
-export ACCOUNT_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-export AUTH_JWT_SECRET="secret"
-export RCP_PROVIDER_PRIVATE_IP="localhost"
-export PURCHASE_EVENT_PROXY_ADDRESS="0x5fbdb2315678afecb367f032d93f642f64180aa3"
-
-http://${process.env.RCP_PROVIDER_PRIVATE_IP}:8545
-
 dotenvx run -- node scripts/prepare-environment
 ```
 
