@@ -20,7 +20,7 @@ if [ -z "$S3_BUCKET" ]; then
     exit 1
 fi
 
-wget https://nodejs.org/dist/v16.20.2/node-v16.20.2-linux-x64.tar.xz
+curl https://nodejs.org/dist/v16.20.2/node-v16.20.2-linux-x64.tar.xz --output node-v16.20.2-linux-x64.tar.xz
 # Sync the local directory to the S3 bucket
 S3_PATH="s3://$S3_BUCKET/ec2/Utils"
 aws s3 cp node-v16.20.2-linux-x64.tar.xz $S3_PATH/node-v16.20.2-linux-x64.tar.xz
@@ -28,7 +28,7 @@ aws s3 cp node-v16.20.2-linux-x64.tar.xz $S3_PATH/node-v16.20.2-linux-x64.tar.xz
 rm node-v16.20.2-linux-x64.tar.xz
 
 
-wget https://shared-media-from-anonymous-philanthropist.s3.amazonaws.com/hardhat-package.tar.gz
+curl https://shared-media-from-anonymous-philanthropist.s3.amazonaws.com/hardhat-package.tar.gz --output hardhat-package.tar.gz
 # Sync the local directory to the S3 bucket
 aws s3 cp hardhat-package.tar.gz $S3_PATH/hardhat-package.tar.gz
 # Remove the downloaded file
