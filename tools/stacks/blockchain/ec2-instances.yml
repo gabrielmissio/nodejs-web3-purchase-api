@@ -137,54 +137,41 @@ Resources:
               #!/bin/bash
 
               # Update the package repository
-              yum update -y
-
+              # yum update -y # Not using any package updates for now
               # Install the AWS CLI (v2) from the Amazon Linux 2 repository
-              yum install -y aws-cli
+              # yum install -y aws-cli # Let's try the pre-installed version
 
               # Install Node.js
-              # Create directories
+              ## Create directories
               mkdir -p /home/ec2-user/downloads
               mkdir -p /usr/local/lib/nodejs
 
-              # Download Node.js tarball from S3
+              ## Download Node.js tarball from S3 and extract it
               aws s3 cp s3://${S3BucketName}/ec2/Utils/node-v16.20.2-linux-x64.tar.xz /home/ec2-user/downloads/node-v16.20.2-linux-x64.tar.xz
-
-              # Extract Node.js
               tar -xf /home/ec2-user/downloads/node-v16.20.2-linux-x64.tar.xz -C /usr/local/lib/nodejs --strip-components=1
 
-              # Remove the old Node.js symlinks and create new ones
+              ## Remove the old Node.js symlinks and create new ones
               ln -sf /usr/local/lib/nodejs/bin/node /usr/bin/node
               ln -sf /usr/local/lib/nodejs/bin/npm /usr/bin/npm
               ln -sf /usr/local/lib/nodejs/bin/npx /usr/bin/npx
 
-              # Verify the installation
+              ## Verify the installation
               node -v
               npm -v
 
-              # # Create directories
+              # Setup Listener
               mkdir -p /home/ec2-user/${AppName}/${StageName}/listener
               # Download application zip build from S3
               aws s3 cp s3://${S3BucketName}/ec2/${AppName}/${StageName}/listener/listener-build.zip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
               # Unzip the application build
               unzip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip -d /home/ec2-user/${AppName}/${StageName}/listener
-              # Remove the application zip build
-              # rm /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
 
-              # # Create directories
+              # Setup "EVM Node"
               mkdir -p /home/ec2-user/Utils/hardhat-package
               # Download application zip build from S3
               aws s3 cp s3://${S3BucketName}/ec2/Utils/hardhat-package.tar.gz /home/ec2-user/Utils/hardhat-package.tar.gz
               # Unzip the application build
               tar -xzvf /home/ec2-user/Utils/hardhat-package.tar.gz -C /home/ec2-user/Utils/hardhat-package
-              # TODO: Remove the application zip build
-
-              # # Create directories
-              mkdir -p /home/ec2-user/${AppName}/${StageName}/listener/blockchain
-              mkdir -p /home/ec2-user/${AppName}/${StageName}/listener/blockchain/abis
-              # Download application zip build from S3
-              aws s3 cp s3://${S3BucketName}/ec2/${AppName}/${StageName}/listener/abis/PurchaseEventProxy.json /home/ec2-user/${AppName}/${StageName}/listener/blockchain/abis/PurchaseEventProxy.json
-              aws s3 cp s3://${S3BucketName}/ec2/${AppName}/${StageName}/listener/abis/Purchase.json /home/ec2-user/${AppName}/${StageName}/listener/blockchain/abis/Purchase.json
 
               # Use imported values in the script
               DOCUMENTDB_ENDPOINT='${DocumentDBEndpoint}'
@@ -195,7 +182,7 @@ Resources:
               USE_DOCDB_CERTIFICATE='true'
               AWS_REGION='${AWS::Region}'
 
-              # # Persist environment variables to /etc/environment
+              # Persist environment variables to /etc/environment
               echo "DOCUMENTDB_ENDPOINT=$DOCUMENTDB_ENDPOINT" >> /etc/environment
               echo "DOCUMENTDB_SECRET_ARN=$DOCUMENTDB_SECRET_ARN" >> /etc/environment
               echo "ABI_BUCKET_NAME=$ABI_BUCKET_NAME" >> /etc/environment
@@ -203,7 +190,7 @@ Resources:
               echo "RCP_PROVIDER_PRIVATE_IP=$RCP_PROVIDER_PRIVATE_IP" >> /etc/environment
               echo "USE_DOCDB_CERTIFICATE=$USE_DOCDB_CERTIFICATE" >> /etc/environment
               echo "AWS_REGION=$AWS_REGION" >> /etc/environment
-
+              
               # Persist to ~/.bashrc for the ec2-user
               echo "export DOCUMENTDB_ENDPOINT=$DOCUMENTDB_ENDPOINT" >> /home/ec2-user/.bashrc
               echo "export DOCUMENTDB_SECRET_ARN=$DOCUMENTDB_SECRET_ARN" >> /home/ec2-user/.bashrc
@@ -212,9 +199,6 @@ Resources:
               echo "export RCP_PROVIDER_PRIVATE_IP=$RCP_PROVIDER_PRIVATE_IP" >> /home/ec2-user/.bashrc
               echo "export USE_DOCDB_CERTIFICATE=$USE_DOCDB_CERTIFICATE" >> /home/ec2-user/.bashrc
               echo "export AWS_REGION=$AWS_REGION" >> /home/ec2-user/.bashrc
-
-              # # Apply changes to current session
-              # source /etc/environment
             - {
                 AppName: !Ref AppName,
                 StageName: !Ref StageName,

@@ -83,9 +83,10 @@ async function eventHandler(event) {
     }
 
     if (state === purchaseEvents.PURCHASE_CONFIRMED) {
-      update.buyerAddress = (await getContractInstance({
+      const contractInstance  = await getContractInstance({
         contractName: 'Purchase', contractAddress,
-      }).buyer()).toLowerCase()
+      })
+      update.buyerAddress = (await contractInstance.buyer()).toLowerCase()
 
       update.settledAt = new Date(
         (await getProvider().getBlock(event.blockNumber)).timestamp * 1000,

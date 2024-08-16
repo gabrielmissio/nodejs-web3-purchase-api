@@ -32,6 +32,7 @@ cd ../../
 
 
 # Download DocumentDB certificate
+mkdir -p tools/stacks/backend/.serverless
 curl https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem --output backend/src/global-bundle.pem
 # zip the backend/src directory into .serverless/listener.zip (ommiting the .git)
 zip -r tools/stacks/backend/.serverless/listener-build.zip backend/src -x "*/.git/*"

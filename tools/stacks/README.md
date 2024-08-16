@@ -17,7 +17,7 @@ export APP_NAME=Web3App
 ### VPC
 
 ```bash
-aws cloudformation update-stack \
+aws cloudformation create-stack \
     --region ${REGION} \
     --stack-name ${APP_NAME}-VPC \
     --template-body file://tools/stacks/global/vpc.yml \
@@ -68,6 +68,17 @@ aws secretsmanager create-secret \
     --region ${REGION}
 ```
 
+### DocumentDB
+
+```bash
+aws cloudformation create-stack \
+    --region ${REGION} \
+    --stack-name ${APP_NAME}-DocumentDB \
+    --template-body file://tools/stacks/backend/documentdb.yml \
+    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME} \
+    --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
+```
+
 ## Blockchain
 
 ### RPC Node
@@ -105,10 +116,25 @@ nohup npm run hardhat -- node --hostname 0.0.0.0 > hardhat.log 2>&1 &
 :warning: **É necessário setar as variáveis de ambiente antes de rodar o script**
 
 ```bash
+echo ADMIN_KEY_SECRET: $(
+    aws secretsmanager get-secret-value \
+    --secret-id ${APP_NAME}/AdminKey/${STAGE} \
+    --query ARN \
+    --output text
+)
+echo JWT_SECRET_ARN: $(
+    aws secretsmanager get-secret-value \
+    --secret-id ${APP_NAME}/JWTSecret/${STAGE} \
+    --query ARN \
+    --output text
+)
+```
+
+```bash
 export FIRST_ADM_USERNAME="admin"
 export FIRST_ADM_PASSWORD="Abcd1234#"
-export JWT_SECRET_ARN=""
-export ADMIN_KEY_SECRET_ARN=""
+export ADMIN_KEY_SECRET_ARN="<ADMIN_KEY_SECRET_ARN>"
+export JWT_SECRET_ARN="<JWT_SECRET_ARN>"
 export PURCHASE_EVENT_PROXY_ADDRESS="0x5fbdb2315678afecb367f032d93f642f64180aa3"
 ```
 
@@ -123,7 +149,7 @@ node scripts/prepare-environment.js
 :warning: **É necessário setar as variáveis de ambiente antes de rodar o script**
 
 ```bash
-export ADMIN_KEY_SECRET_ARN=""
+export ADMIN_KEY_SECRET_ARN="<ADMIN_KEY_SECRET_ARN>"
 export PURCHASE_EVENT_PROXY_ADDRESS="0x5fbdb2315678afecb367f032d93f642f64180aa3"
 ```
 
@@ -134,25 +160,15 @@ cd /home/ec2-user/Web3App/dev/listener/backend/src
 sudo touch listener.log
 sudo chown ec2-user:ec2-user listener.log
 sudo chmod 664 listener.log
+
 nohup node apps/listener/index.js > listener.log 2>&1 &
 ```
 
 ## Backend
 
-### DocumentDB
-
-```bash
-aws cloudformation create-stack \
-    --region ${REGION} \
-    --stack-name ${APP_NAME}-DocumentDB \
-    --template-body file://tools/stacks/backend/documentdb.yml \
-    --parameters ParameterKey=AppName,ParameterValue=${APP_NAME} \
-    --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM
-```
-
 ### Lambda Functions (and API Gateway)
 
-Carregar nome do bucket S3
+Carregar nome do bucket S3 e ids dos secredos
 
 ```bash
 export DEPLOYMENT_BUCKET_NAME=$(
@@ -162,11 +178,6 @@ export DEPLOYMENT_BUCKET_NAME=$(
     --query 'Stacks[0].Outputs[1].OutputValue' \
     --output text
 )
-```
-
-Carregar id dos secredos
-
-```bash
 export ADMIN_KEY_SECRET=$(
     aws secretsmanager get-secret-value \
     --secret-id ${APP_NAME}/AdminKey/${STAGE} \
