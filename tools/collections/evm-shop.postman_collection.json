@@ -12,12 +12,10 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3000/health",
-					"protocol": "http",
+					"raw": "{{customer_api_url}}/health",
 					"host": [
-						"localhost"
+						"{{customer_api_url}}"
 					],
-					"port": "3000",
 					"path": [
 						"health"
 					]
@@ -31,19 +29,18 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3000/products?state=CREATED&page=1&limit=10",
-					"protocol": "http",
+					"raw": "{{customer_api_url}}/products?page=1&limit=10",
 					"host": [
-						"localhost"
+						"{{customer_api_url}}"
 					],
-					"port": "3000",
 					"path": [
 						"products"
 					],
 					"query": [
 						{
 							"key": "state",
-							"value": "CREATED"
+							"value": "ITEM_RECEIVED",
+							"disabled": true
 						},
 						{
 							"key": "buyerAddress",
@@ -96,12 +93,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:3000/auth/login",
-					"protocol": "http",
+					"raw": "{{admin_api_url}}/auth/login",
 					"host": [
-						"localhost"
+						"{{admin_api_url}}"
 					],
-					"port": "3000",
 					"path": [
 						"auth",
 						"login"
@@ -123,7 +118,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"Abcd1234#\"\n}",
+					"raw": "{\n    \"username\": \"admin1\",\n    \"password\": \"Abcd1234#\"\n} ",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -131,12 +126,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:3000/auth/signup",
-					"protocol": "http",
+					"raw": "{{admin_api_url}}/auth/signup",
 					"host": [
-						"localhost"
+						"{{admin_api_url}}"
 					],
-					"port": "3000",
 					"path": [
 						"auth",
 						"signup"
@@ -166,12 +159,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:3000/auth/change-password",
-					"protocol": "http",
+					"raw": "{{admin_api_url}}/auth/change-password",
 					"host": [
-						"localhost"
+						"{{admin_api_url}}"
 					],
-					"port": "3000",
 					"path": [
 						"auth",
 						"change-password"
@@ -193,7 +184,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"Playstation 7\",\n    \"value\": \"5000000000000000000\"\n}",
+					"raw": "{\n    \"name\": \"38 Com Munição Infinita\",\n    \"value\": \"100000000000000000000\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -201,12 +192,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:3000/purchases/publish",
-					"protocol": "http",
+					"raw": "{{admin_api_url}}/purchases/publish",
 					"host": [
-						"localhost"
+						"{{admin_api_url}}"
 					],
-					"port": "3000",
 					"path": [
 						"purchases",
 						"publish"
@@ -236,12 +225,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:3000/purchases/abort",
-					"protocol": "http",
+					"raw": "{{admin_api_url}}/purchases/abort",
 					"host": [
-						"localhost"
+						"{{admin_api_url}}"
 					],
-					"port": "3000",
 					"path": [
 						"purchases",
 						"abort"
@@ -263,7 +250,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"contractAddress\": \"0x5FbDB2315678afecb367f032d93F642f64180aa3\"\n}",
+					"raw": "{\n    \"contractAddress\": true\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -271,12 +258,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:3000/purchases/settle-funds",
-					"protocol": "http",
+					"raw": "{{admin_api_url}}/purchases/settle-funds",
 					"host": [
-						"localhost"
+						"{{admin_api_url}}"
 					],
-					"port": "3000",
 					"path": [
 						"purchases",
 						"settle-funds"
@@ -286,10 +271,42 @@
 			"response": []
 		}
 	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
 	"variable": [
 		{
 			"key": "auth_token",
 			"value": ""
+		},
+		{
+			"key": "customer_api_url",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_api_url",
+			"value": "",
+			"type": "string"
 		}
 	]
 }
