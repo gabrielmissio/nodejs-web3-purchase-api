@@ -1,0 +1,233 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  AppName:
+    Type: String
+    Description: "The name of the application"
+  StageName:
+    Type: String
+    Default: "dev"
+    Description: "The name of the API stage"
+  JWTSecret:
+    Type: String
+    Description: "The ARN of the secret containing the JWT secret"
+  AdminKeySecret:
+    Type: String
+    Description: "The ARN of the secret containing the admin key"
+  PurchaseEventProxy:
+    Type: String
+    Description: "The address of the purchase event proxy"
+
+Resources:
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+        AllowHeaders: ['Content-Type', 'Authorization']
+        AllowOrigins: ['*']
+      StageName: !Ref StageName
+
+  AdminLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apps/admin/index.handler
+      Runtime: nodejs18.x
+      CodeUri: ../../../backend/src
+      MemorySize: 128
+      Timeout: 20
+      VpcConfig:
+        SecurityGroupIds: 
+          - !ImportValue 
+            'Fn::Sub': '${AppName}-SecurityGroupId'
+        SubnetIds: !Split
+          - ","
+          - !ImportValue
+            'Fn::Sub': '${AppName}-PrivateSubnetIds'
+      Environment:
+        Variables:
+          STAGE: !Ref StageName
+          JWT_SECRET_ARN: !Ref JWTSecret
+          ADMIN_KEY_SECRET_ARN: !Ref AdminKeySecret
+          PURCHASE_EVENT_PROXY_ADDRESS: !Ref PurchaseEventProxy
+          DOCUMENTDB_ENDPOINT: !ImportValue 
+            'Fn::Sub': '${AppName}-DocumentDBEndpoint'
+          DOCUMENTDB_SECRET_ARN: !ImportValue 
+            'Fn::Sub': '${AppName}-DocumentDBSecretArn'
+          RCP_PROVIDER_PRIVATE_IP: !ImportValue 
+            'Fn::Sub': '${AppName}-EC2RPCNodePrivateIP'
+          RCP_PROVIDER_PRIVATE_DNS: !ImportValue
+            'Fn::Sub': '${AppName}-EC2RPCNodePrivateDNS'
+          ABI_BUCKET_NAME: !ImportValue
+            'Fn::Sub': '${AppName}-S3ConfigBucketName'
+          ABI_BUCKET_PATH: !Sub 'ec2/${AppName}/${StageName}/listener/abis'
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 
+                - "secretsmanager:GetSecretValue"
+              Resource: 
+                - !Ref JWTSecret
+                - !Ref AdminKeySecret
+                - !ImportValue 
+                  'Fn::Sub': '${AppName}-DocumentDBSecretArn'
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 
+                - "s3:GetObject"
+              Resource: !Sub 
+                - '${BucketArn}/*'
+                - BucketArn: !ImportValue 
+                    'Fn::Sub': '${AppName}-S3ConfigBucketArn'
+      Events:
+        ApiEventAdmin:
+          Type: HttpApi
+          Properties:
+            Path: /admin
+            Method: ANY
+            ApiId: !Ref HttpApi
+        ApiEventAdminProxy:
+          Type: HttpApi
+          Properties:
+            Path: /admin/{proxy+}
+            Method: ANY
+            ApiId: !Ref HttpApi
+
+  CustomerLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apps/customer/index.handler
+      Runtime: nodejs18.x
+      CodeUri: ../../../backend/src
+      MemorySize: 128
+      Timeout: 20
+      VpcConfig:
+        SecurityGroupIds: 
+          - !ImportValue 
+            'Fn::Sub': '${AppName}-SecurityGroupId'
+        SubnetIds: !Split
+          - ","
+          - !ImportValue
+            'Fn::Sub': '${AppName}-PrivateSubnetIds'
+      Environment:
+        Variables:
+          STAGE: !Ref StageName
+          DOCUMENTDB_ENDPOINT: !ImportValue 
+            'Fn::Sub': '${AppName}-DocumentDBEndpoint'
+          DOCUMENTDB_SECRET_ARN: !ImportValue 
+            'Fn::Sub': '${AppName}-DocumentDBSecretArn'
+          RCP_PROVIDER_PRIVATE_IP: !ImportValue 
+            'Fn::Sub': '${AppName}-EC2RPCNodePrivateIP'
+          RCP_PROVIDER_PRIVATE_DNS: !ImportValue
+            'Fn::Sub': '${AppName}-EC2RPCNodePrivateDNS'
+          ABI_BUCKET_NAME: !ImportValue
+            'Fn::Sub': '${AppName}-S3ConfigBucketName'
+          ABI_BUCKET_PATH: !Sub 'ec2/${AppName}/${StageName}/listener/abis'
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 
+                - "secretsmanager:GetSecretValue"
+              Resource: !ImportValue 
+                'Fn::Sub': '${AppName}-DocumentDBSecretArn'
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 
+                - "s3:GetObject"
+              Resource: !Sub 
+                - '${BucketArn}/*'
+                - BucketArn: !ImportValue 
+                    'Fn::Sub': '${AppName}-S3ConfigBucketArn'
+      Events:
+        ApiEventAdmin:
+          Type: HttpApi
+          Properties:
+            Path: /customer
+            Method: ANY
+            ApiId: !Ref HttpApi
+        ApiEventAdminProxy:
+          Type: HttpApi
+          Properties:
+            Path: /customer/{proxy+}
+            Method: ANY
+            ApiId: !Ref HttpApi
+
+  UtilsLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: apps/rpc-proxy/index.handler
+      Runtime: nodejs18.x
+      CodeUri: ../../../backend/src
+      MemorySize: 128
+      Timeout: 20
+      VpcConfig:
+        SecurityGroupIds: 
+          - !ImportValue 
+            'Fn::Sub': '${AppName}-SecurityGroupId'
+        SubnetIds: !Split
+          - ","
+          - !Select 
+            - 0
+            - !Split 
+              - ","
+              - !ImportValue 
+                'Fn::Sub': '${AppName}-PrivateSubnetIds'
+      Environment:
+        Variables:
+          STAGE: !Ref StageName
+          DOCUMENTDB_ENDPOINT: !ImportValue 
+            'Fn::Sub': '${AppName}-DocumentDBEndpoint'
+          DOCUMENTDB_SECRET_ARN: !ImportValue 
+            'Fn::Sub': '${AppName}-DocumentDBSecretArn'
+          RCP_PROVIDER_PRIVATE_IP: !ImportValue 
+            'Fn::Sub': '${AppName}-EC2RPCNodePrivateIP'
+          RCP_PROVIDER_PRIVATE_DNS: !ImportValue
+            'Fn::Sub': '${AppName}-EC2RPCNodePrivateDNS'
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: 
+                - "secretsmanager:GetSecretValue"
+              Resource: !ImportValue 
+                'Fn::Sub': '${AppName}-DocumentDBSecretArn'
+      Events:
+        ApiEventUtilsRPCProxy:
+          Type: HttpApi
+          Properties:
+            Path: /utils/rpc-proxy
+            Method: POST
+            ApiId: !Ref HttpApi
+
+Outputs:
+  ApiGatewayAdminInvokeURL:
+    Description: "Invoke URL for the API Gateway"
+    Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/admin'
+    Export:
+      Name: !Sub '${AppName}-ApiGatewayAdminInvokeURL-${StageName}'
+
+  AdminLambdaFunctionArn:
+    Description: "ARN of the deployed Lambda function"
+    Value: !GetAtt AdminLambdaFunction.Arn
+    Export:
+      Name: !Sub '${AppName}-AdminLambdaFunctionArn-${StageName}'
+
+  ApiGatewayCustomerInvokeURL:
+    Description: "Invoke URL for the API Gateway"
+    Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/customer'
+    Export:
+      Name: !Sub '${AppName}-ApiGatewayCustomerInvokeURL-${StageName}'
+
+  CustomerLambdaFunctionArn:
+    Description: "ARN of the deployed Lambda function"
+    Value: !GetAtt CustomerLambdaFunction.Arn
+    Export:
+      Name: !Sub '${AppName}-CustomerLambdaFunctionArn-${StageName}'

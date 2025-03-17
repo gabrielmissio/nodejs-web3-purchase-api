@@ -1,0 +1,128 @@
+Parameters:
+  AppName:
+    Description: The app of the stack
+    Type: String
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: 'Name'
+          Value: !Sub ${AppName}-VPC
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.1.0/24"
+      AvailabilityZone: !Select [0, !GetAZs '']
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.2.0/24"
+      AvailabilityZone: !Select [1, !GetAZs '']
+
+  # Security Group for Lambda and EC2 to access DocumentDB
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow inbound access to DocumentDB from Lambda and EC2
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27017
+          CidrIp: 0.0.0.0/0 # Adjust according to your security requirements
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0 # Adjust according to your security requirements
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0 # Adjust according to your security requirements
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 # Adjust according to your security requirements
+        - IpProtocol: tcp
+          FromPort: 8545
+          ToPort: 8545
+          CidrIp: 0.0.0.0/0
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      VpcEndpointType: Gateway
+      VpcId: !Ref VPC
+      RouteTableIds:
+        - !Ref PrivateRouteTable
+
+  SecretsManagerVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !GetAtt SecurityGroup.GroupId
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.secretsmanager"
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+
+Outputs:
+  VPCId:
+    Description: The VPC ID where the DocumentDB cluster is deployed
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${AppName}-VPCId
+
+  PrivateSubnetIds:
+    Description: Subnet IDs where the DocumentDB cluster is deployed
+    Value: !Join [",", [!Ref PrivateSubnet1, !Ref PrivateSubnet2]]
+    Export:
+      Name: !Sub ${AppName}-PrivateSubnetIds
+
+  SecurityGroupId:
+    Description: Security Group ID for accessing DocumentDB and Secrets Manager
+    Value: !Ref SecurityGroup
+    Export:
+      Name: !Sub ${AppName}-SecurityGroupId
+
+  S3VPCEndpointId:
+    Description: ID of the S3 Gateway Endpoint
+    Value: !Ref S3VPCEndpoint
+    Export:
+      Name: !Sub ${AppName}-S3VPCEndpointId
+
+  SecretsManagerVPCEndpointId:
+    Description: ID of the Secrets Manager Interface Endpoint
+    Value: !Ref SecretsManagerVPCEndpoint
+    Export:
+      Name: !Sub ${AppName}-SecretsManagerVPCEndpointId

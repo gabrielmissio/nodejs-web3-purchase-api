@@ -1,0 +1,227 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to set up a free-tier compatible EC2 instance with access to DocumentDB and Secrets Manager.
+
+Parameters:
+  AppName:
+    Type: String
+    Description: The application name used for exporting/importing stack outputs.
+  StageName:
+    Type: String
+    Default: "dev"
+    Description: "The name of the API stage"
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Description: "Latest Amazon Linux 2 AMI ID for the region"
+  S3BucketName:
+    Type: String
+    Description: The name of the S3 bucket used for storing application artifacts.
+
+Resources:
+  EC2InstanceConnectEndpoint:
+    Type: AWS::EC2::InstanceConnectEndpoint
+    Properties:
+      SubnetId: !Select 
+        - 0
+        - !Split 
+          - ","
+          - !ImportValue 
+            'Fn::Sub': '${AppName}-PrivateSubnetIds'
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+        - !ImportValue 
+            'Fn::Sub': '${AppName}-SecurityGroupId'
+      PreserveClientIp: false
+
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: Allow traffic to DocumentDB and Secrets Manager
+      VpcId: !ImportValue
+        Fn::Sub: "${AppName}-VPCId"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27017
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: "${AppName}-SecurityGroupId"
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: "${AppName}-SecurityGroupId"
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: "${AppName}-SecurityGroupId"
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: "${AppName}-SecurityGroupId"
+        - IpProtocol: tcp
+          FromPort: 8545
+          ToPort: 8545
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: "${AppName}-SecurityGroupId"
+      Tags:
+        - Key: Name
+          Value: !Sub "${AppName}-EC2SecurityGroup"
+
+  EC2RPCNodeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AmazonDocDBFullAccess
+      Policies:
+        - PolicyName: S3AccessPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource:
+                  - !Sub "arn:aws:s3:::${S3BucketName}"
+                  - !Sub "arn:aws:s3:::${S3BucketName}/*"
+        - PolicyName: ListAllS3BucketsPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource: "*"
+
+  EC2RPCNodeProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: 
+        - !Ref EC2RPCNodeRole
+
+  EC2RPCNode:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref EC2SecurityGroup
+      SubnetId: !Select 
+        - 0
+        - !Split 
+          - ","
+          - !ImportValue 
+            'Fn::Sub': '${AppName}-PrivateSubnetIds'
+      # !Select [0, !Split [",", !ImportValue Fn::Sub "${AppName}-PrivateSubnetIds"]]
+      ImageId: !Ref LatestAmiId # Amazon Linux 2 AMI (for x86_64) - Free tier eligible
+      IamInstanceProfile: !Ref EC2RPCNodeProfile
+      Tags:
+        - Key: Name
+          Value: !Sub "${AppName}-EC2RPCNodeInstance"
+      UserData:
+        Fn::Base64: 
+          !Sub
+            - |-
+              #!/bin/bash
+
+              # Update the package repository
+              # yum update -y # Not using any package updates for now
+              # Install the AWS CLI (v2) from the Amazon Linux 2 repository
+              # yum install -y aws-cli # Let's try the pre-installed version
+
+              # Install Node.js
+              ## Create directories
+              mkdir -p /home/ec2-user/downloads
+              mkdir -p /usr/local/lib/nodejs
+
+              ## Download Node.js tarball from S3 and extract it
+              aws s3 cp s3://${S3BucketName}/ec2/Utils/node-v16.20.2-linux-x64.tar.xz /home/ec2-user/downloads/node-v16.20.2-linux-x64.tar.xz
+              tar -xf /home/ec2-user/downloads/node-v16.20.2-linux-x64.tar.xz -C /usr/local/lib/nodejs --strip-components=1
+
+              ## Remove the old Node.js symlinks and create new ones
+              ln -sf /usr/local/lib/nodejs/bin/node /usr/bin/node
+              ln -sf /usr/local/lib/nodejs/bin/npm /usr/bin/npm
+              ln -sf /usr/local/lib/nodejs/bin/npx /usr/bin/npx
+
+              ## Verify the installation
+              node -v
+              npm -v
+
+              # Setup Listener
+              mkdir -p /home/ec2-user/${AppName}/${StageName}/listener
+              # Download application zip build from S3
+              aws s3 cp s3://${S3BucketName}/ec2/${AppName}/${StageName}/listener/listener-build.zip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip
+              # Unzip the application build
+              unzip /home/ec2-user/${AppName}/${StageName}/listener/listener-build.zip -d /home/ec2-user/${AppName}/${StageName}/listener
+
+              # Setup "EVM Node"
+              mkdir -p /home/ec2-user/Utils/hardhat-package
+              # Download application zip build from S3
+              aws s3 cp s3://${S3BucketName}/ec2/Utils/hardhat-package.tar.gz /home/ec2-user/Utils/hardhat-package.tar.gz
+              # Unzip the application build
+              tar -xzvf /home/ec2-user/Utils/hardhat-package.tar.gz -C /home/ec2-user/Utils/hardhat-package
+
+              # Use imported values in the script
+              DOCUMENTDB_ENDPOINT='${DocumentDBEndpoint}'
+              DOCUMENTDB_SECRET_ARN='${DocumentDBSecretArn}'
+              ABI_BUCKET_NAME='${S3BucketName}'
+              ABI_BUCKET_PATH='ec2/${AppName}/${StageName}/listener/abis'
+              RCP_PROVIDER_PRIVATE_IP='localhost'
+              USE_DOCDB_CERTIFICATE='true'
+              AWS_REGION='${AWS::Region}'
+
+              # Persist environment variables to /etc/environment
+              echo "DOCUMENTDB_ENDPOINT=$DOCUMENTDB_ENDPOINT" >> /etc/environment
+              echo "DOCUMENTDB_SECRET_ARN=$DOCUMENTDB_SECRET_ARN" >> /etc/environment
+              echo "ABI_BUCKET_NAME=$ABI_BUCKET_NAME" >> /etc/environment
+              echo "ABI_BUCKET_PATH=$ABI_BUCKET_PATH" >> /etc/environment
+              echo "RCP_PROVIDER_PRIVATE_IP=$RCP_PROVIDER_PRIVATE_IP" >> /etc/environment
+              echo "USE_DOCDB_CERTIFICATE=$USE_DOCDB_CERTIFICATE" >> /etc/environment
+              echo "AWS_REGION=$AWS_REGION" >> /etc/environment
+              
+              # Persist to ~/.bashrc for the ec2-user
+              echo "export DOCUMENTDB_ENDPOINT=$DOCUMENTDB_ENDPOINT" >> /home/ec2-user/.bashrc
+              echo "export DOCUMENTDB_SECRET_ARN=$DOCUMENTDB_SECRET_ARN" >> /home/ec2-user/.bashrc
+              echo "export ABI_BUCKET_NAME=$ABI_BUCKET_NAME" >> /home/ec2-user/.bashrc
+              echo "export ABI_BUCKET_PATH=$ABI_BUCKET_PATH" >> /home/ec2-user/.bashrc
+              echo "export RCP_PROVIDER_PRIVATE_IP=$RCP_PROVIDER_PRIVATE_IP" >> /home/ec2-user/.bashrc
+              echo "export USE_DOCDB_CERTIFICATE=$USE_DOCDB_CERTIFICATE" >> /home/ec2-user/.bashrc
+              echo "export AWS_REGION=$AWS_REGION" >> /home/ec2-user/.bashrc
+            - {
+                AppName: !Ref AppName,
+                StageName: !Ref StageName,
+                S3BucketName: !Ref S3BucketName,
+                DocumentDBEndpoint: !ImportValue { 'Fn::Sub': '${AppName}-DocumentDBEndpoint' },
+                DocumentDBSecretArn: !ImportValue { 'Fn::Sub': '${AppName}-DocumentDBSecretArn' }
+              }
+
+Outputs:
+  EC2RPCNodeId:
+    Description: The Instance ID of the EC2 instance
+    Value: !GetAtt EC2RPCNode.InstanceId
+    Export:
+      Name: !Sub "${AppName}-EC2RPCNodeId"
+
+  EC2RPCNodePrivateDNS:
+    Description: The Private DNS of the EC2 instance
+    Value: !GetAtt EC2RPCNode.PrivateDnsName
+    Export:
+      Name: !Sub "${AppName}-EC2RPCNodePrivateDNS"
+
+  EC2RPCNodePrivateIP:
+    Description: The Private IP of the EC2 instance
+    Value: !GetAtt EC2RPCNode.PrivateIp
+    Export:
+      Name: !Sub "${AppName}-EC2RPCNodePrivateIP"

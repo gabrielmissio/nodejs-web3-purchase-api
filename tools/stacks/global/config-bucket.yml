@@ -1,0 +1,24 @@
+Parameters:
+  AppName:
+    Description: The name of the application
+    Type: String
+
+Resources:
+  ConfigBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+Outputs:
+  S3BucketArn:
+    Value: !GetAtt ConfigBucket.Arn
+    Export:
+      Name: !Sub ${AppName}-S3ConfigBucketArn
+  S3BucketName:
+    Value: !Ref ConfigBucket
+    Export:
+      Name: !Sub ${AppName}-S3ConfigBucketName

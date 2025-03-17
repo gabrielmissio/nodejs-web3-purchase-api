@@ -1,0 +1,22 @@
+{
+  "name": "web3-purchase-backend",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.12.1",
+    "express": "^4.19.2",
+    "joi": "^17.13.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.4.0",
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.635.0",
+    "@aws-sdk/client-secrets-manager": "^3.635.0"
+  }
+}

@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::SecretsManager-2020-07-23
+Description: DocumentDB Free Tier Compatible Setup with Secrets Manager Credentials Rotation
+
+Parameters:
+  AppName:
+    Description: The app of the stack
+    Type: String
+  MasterUsername:
+    Description: The master username for the DocumentDB cluster
+    Type: String
+    MinLength: 1
+    MaxLength: 16
+    Default: masterAdmin
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: "Must begin with a letter and contain only alphanumeric characters."
+
+Resources:
+  DocDBCluster:
+    Type: AWS::DocDB::DBCluster
+    Properties:
+      EngineVersion: '4.0.0'
+      MasterUsername: !Sub "{{resolve:secretsmanager:${DocumentDBSecret}:SecretString:username}}"
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${DocumentDBSecret}:SecretString:password}}"
+      DBClusterIdentifier: !Sub ${AppName}-DocumentDBCluster
+      VpcSecurityGroupIds:
+        - !ImportValue
+          'Fn::Sub': '${AppName}-SecurityGroupId'
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      BackupRetentionPeriod: 1
+      PreferredBackupWindow: 03:00-06:00
+      PreferredMaintenanceWindow: Sun:06:00-Sun:07:00
+      StorageEncrypted: true
+
+  DocDBInstance:
+    Type: AWS::DocDB::DBInstance
+    Properties:
+      # DBInstanceClass: db.r5.large  # Instance class suited for production workloads
+      DBInstanceClass: db.t3.medium
+      DBClusterIdentifier: !Ref DocDBCluster
+      DBInstanceIdentifier: !Sub ${AppName}-DocumentDBInstance
+      PreferredMaintenanceWindow: Sun:06:00-Sun:07:00  # Maintenance window
+      AutoMinorVersionUpgrade: true  # Enable automatic minor version upgrades
+
+  DBSubnetGroup:
+    Type: AWS::DocDB::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for DocumentDB cluster
+      SubnetIds: !Split
+        - ","
+        - !ImportValue
+          'Fn::Sub': '${AppName}-PrivateSubnetIds'
+
+  # Secrets Manager Secret for DocumentDB credentials
+  DocumentDBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ${AppName}/DocumentDBSecret
+      Description: Secret containing DocumentDB credentials
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username": "${MasterUsername}", "ssl": true, "port": "27017"}'
+        GenerateStringKey: "password"
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+
+  SecretDocDBClusterAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      TargetId: !Ref DocDBCluster
+      SecretId: !Ref DocumentDBSecret
+      TargetType: AWS::DocDB::DBCluster
+
+  SecretRotationSchedule:
+    Type: AWS::SecretsManager::RotationSchedule
+    DependsOn: SecretDocDBClusterAttachment
+    Properties:
+      SecretId: !Ref DocumentDBSecret
+      HostedRotationLambda:
+        RotationType: MongoDBSingleUser
+        RotationLambdaName: MongoDBSingleUser
+        VpcSecurityGroupIds: !ImportValue
+          'Fn::Sub': '${AppName}-SecurityGroupId'
+        VpcSubnetIds: !ImportValue
+          'Fn::Sub': '${AppName}-PrivateSubnetIds'
+      RotationRules:
+        AutomaticallyAfterDays: 30  # Adjust the rotation period as needed
+      # RotationRules:
+      #   Duration: 2h
+      #   ScheduleExpression: cron(0 8 1 * ? *)
+
+Outputs:
+  DocumentDBEndpoint:
+    Description: Endpoint for connecting to the DocumentDB cluster
+    Value: !GetAtt DocDBCluster.Endpoint
+    Export:
+      Name: !Sub ${AppName}-DocumentDBEndpoint
+  
+  DocumentDBSecretArn:
+    Description: ARN of the secret containing DocumentDB credentials
+    Value: !Ref DocumentDBSecret
+    Export:
+      Name: !Sub ${AppName}-DocumentDBSecretArn

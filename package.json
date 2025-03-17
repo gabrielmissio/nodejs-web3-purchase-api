@@ -1,28 +1,25 @@
 {
-  "name": "web3-purchase-api",
+  "name": "web3-purchase",
   "version": "1.0.0",
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev:api": "dotenvx run -- nodemon ./api/src/server.js",
     "dev:front": "http-server -o ./frontend/public -p 3001",
-    "hardhat": "dotenvx run -- hardhat --config blockchain/hardhat.config.js",
+    "hardhat": "hardhat --config blockchain/hardhat.config.js",
     "lint": "eslint",
     "prepare": "husky"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@dotenvx/dotenvx": "^0.44.1",
-    "@eslint/js": "^9.3.0",
-    "@nomicfoundation/hardhat-ethers": "^3.0.6",
-    "eslint": "^9.3.0",
-    "globals": "^15.2.0",
-    "hardhat": "^2.22.4",
+    "@eslint/js": "^9.8.0",
+    "eslint": "^9.8.0",
+    "globals": "^15.9.0",
+    "hardhat": "^2.22.8",
     "http-server": "^14.1.1",
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.2",
-    "nodemon": "^3.1.0"
+    "husky": "^9.1.4",
+    "lint-staged": "^15.2.8",
+    "nodemon": "^3.1.4"
   },
   "dependencies": {
     "ethers": "^6.12.1",
